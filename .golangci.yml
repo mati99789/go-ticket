@@ -1,0 +1,52 @@
+version: 2
+run:
+  concurrency: 4
+  timeout: 5m
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - bodyclose
+    - dogsled
+    - dupl
+    - funlen
+    - goconst
+    - gocyclo
+    - gosec
+    - lll
+    - misspell
+    - nakedret
+    - revive
+    - unconvert
+    - unparam
+    - whitespace
+
+linters-settings:
+  funlen:
+    lines: 120 # Increased for tests
+    statements: 60
+  gocyclo:
+    min-complexity: 15
+  lll:
+    line-length: 120
+  revive:
+    severity: error
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude-rules:
+    - linters:
+        - revive
+      text: "exported: exported"
+    - linters:
+        - revive
+      text: "package-comments"
+    - path: _test\.go
+      linters:
+        - funlen
