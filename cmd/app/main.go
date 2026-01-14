@@ -1,0 +1,96 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"log/slog"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
+	"github.com/mati/go-ticket/internal/api"
+	"github.com/mati/go-ticket/internal/postgres"
+)
+
+func main() {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
+	if err := run(logger); err != nil {
+		slog.Error("Application error", "error", err)
+		os.Exit(1)
+	}
+
+}
+
+func run(logger *slog.Logger) any {
+	// Load environment variables from .env file
+	if err := godotenv.Load(); err != nil {
+		logger.Warn("Failed to load environment variables", "error", err)
+	}
+
+	dbUrl := os.Getenv("DATABASE_URL")
+	if dbUrl == "" {
+		return errors.New("DATABASE_URL is not set")
+	}
+
+	// Create database connection pool
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	pool, err := pgxpool.New(ctx, dbUrl)
+	if err != nil {
+		return errors.New("failed to create database connection pool")
+	}
+	defer pool.Close()
+
+	queries := postgres.New(pool)
+	repo := postgres.NewEventRepository(queries)
+	eventHandler := api.NewHTTPHandler(repo)
+
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("POST /events", eventHandler.CreateEvent)
+	mux.HandleFunc("PUT /events/{id}", eventHandler.UpdateEvent)
+	mux.HandleFunc("DELETE /events/{id}", eventHandler.DeleteEvent)
+	mux.HandleFunc("GET /events/{id}", eventHandler.GetEvent)
+	mux.HandleFunc("GET /events", eventHandler.ListEvents)
+
+	srv := &http.Server{
+		Addr:         ":8080",
+		Handler:      mux,
+		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  5 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Error("Failed to start server", "error", err)
+		}
+	}()
+
+	logger.Info("Server started on :8080")
+
+	// Wait for interrupt signal
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+
+	// Wait for signal
+	<-stop
+	logger.Info("Shutting down server...")
+
+	// Shutdown server
+	ctx, cancel = context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.Error("Failed to shutdown server", "error", err)
+		return errors.New("failed to shutdown server")
+	}
+	logger.Info("Server shutdown")
+	return nil
+}

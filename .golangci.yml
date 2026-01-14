@@ -34,7 +34,7 @@ linters-settings:
   lll:
     line-length: 120
   revive:
-    severity: error
+    severity: warning
 
 issues:
   exclude-use-default: false

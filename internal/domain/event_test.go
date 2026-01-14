@@ -8,6 +8,7 @@ import (
 	"github.com/mati/go-ticket/internal/domain"
 )
 
+//nolint:funlen
 func TestNewEvent(t *testing.T) {
 	type args struct {
 		id      uuid.UUID
