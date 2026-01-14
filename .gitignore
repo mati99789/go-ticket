@@ -1,0 +1,31 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.html
+
+# Environment variables (CRITICAL)
+.env
+
+# IDE specific
+.idea/
+.vscode/
+.DS_Store
+
+# Temporary files & Build artifacts
+tmp/
+dist/
+build/
+main # Jeśli budujesz binary jako 'main'
+go-ticket # Nazwa twojej binarki
+
+# Vendor (chyba że chcesz vendoring)
+vendor/
