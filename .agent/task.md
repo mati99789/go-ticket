@@ -36,6 +36,7 @@ _Uwaga: Zaczniemy od modularnego monolitu, żeby skupić się na kodzie domenowy
 
 ## Phase 4: DevOps & Cloud
 
+- [ ] Automatyzacja migracji w kodzie (Embedded migrations). <!-- id: 17 -->
 - [ ] Konteneryzacja (Dockerfile, Docker Compose dla całości). <!-- id: 13 -->
 - [ ] GitHub Actions (CI pipelines). <!-- id: 14 -->
 - [ ] Provisioning AWS (Terraform/OpenTofu). <!-- id: 15 -->
