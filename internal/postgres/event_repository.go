@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mati/go-ticket/internal/domain"
 )
@@ -111,4 +112,16 @@ func (r *EventRepository) ListEvents(ctx context.Context) ([]*domain.Event, erro
 		events = append(events, event)
 	}
 	return events, nil
+}
+
+func (r *EventRepository) ReserveSpots(ctx context.Context, eventID uuid.UUID, spots int) error {
+	_, err := r.queries.ReserveSpots(ctx, ReserveSpotsParams{
+		ID:             pgtype.UUID{Bytes: eventID, Valid: true},
+		AvailableSpots: int32(spots),
+	})
+	return err
+}
+
+func (r *EventRepository) WithTx(tx pgx.Tx) *EventRepository {
+	return &EventRepository{queries: r.queries.WithTx(tx)}
 }

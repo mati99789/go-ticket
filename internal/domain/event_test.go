@@ -11,11 +11,12 @@ import (
 //nolint:funlen
 func TestNewEvent(t *testing.T) {
 	type args struct {
-		id      uuid.UUID
-		name    string
-		price   int64
-		startAt time.Time
-		endAt   time.Time
+		id       uuid.UUID
+		name     string
+		price    int64
+		startAt  time.Time
+		endAt    time.Time
+		capacity int
 	}
 
 	tests := []struct {
@@ -26,44 +27,48 @@ func TestNewEvent(t *testing.T) {
 		{
 			name: "valid event",
 			args: args{
-				id:      uuid.New(),
-				name:    "Metallica Concert",
-				price:   10000, // 100.00
-				startAt: time.Now().Add(24 * time.Hour),
-				endAt:   time.Now().Add(26 * time.Hour),
+				id:       uuid.New(),
+				name:     "Metallica Concert",
+				price:    10000, // 100.00
+				startAt:  time.Now().Add(24 * time.Hour),
+				endAt:    time.Now().Add(26 * time.Hour),
+				capacity: 10,
 			},
 			wantErr: nil,
 		},
 		{
 			name: "empty name",
 			args: args{
-				id:      uuid.New(),
-				name:    "",
-				price:   100,
-				startAt: time.Now(),
-				endAt:   time.Now().Add(time.Hour),
+				id:       uuid.New(),
+				name:     "",
+				price:    100,
+				startAt:  time.Now(),
+				endAt:    time.Now().Add(time.Hour),
+				capacity: 10,
 			},
 			wantErr: domain.ErrEventNameEmpty,
 		},
 		{
 			name: "negative price",
 			args: args{
-				id:      uuid.New(),
-				name:    "Metallica Concert",
-				price:   -100,
-				startAt: time.Now(),
-				endAt:   time.Now().Add(time.Hour),
+				id:       uuid.New(),
+				name:     "Metallica Concert",
+				price:    -100,
+				startAt:  time.Now(),
+				endAt:    time.Now().Add(time.Hour),
+				capacity: 10,
 			},
 			wantErr: domain.ErrEventPriceNegative,
 		},
 		{
 			name: "endAt before startAt",
 			args: args{
-				id:      uuid.New(),
-				name:    "Metallica Concert",
-				price:   100,
-				startAt: time.Now().Add(time.Hour),
-				endAt:   time.Now(),
+				id:       uuid.New(),
+				name:     "Metallica Concert",
+				price:    100,
+				startAt:  time.Now().Add(time.Hour),
+				endAt:    time.Now(),
+				capacity: 10,
 			},
 			wantErr: domain.ErrEventStartAfterEnd,
 		},
@@ -71,7 +76,7 @@ func TestNewEvent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := domain.NewEvent(tt.args.id, tt.args.name, tt.args.price, tt.args.startAt, tt.args.endAt)
+			got, err := domain.NewEvent(tt.args.id, tt.args.name, tt.args.price, tt.args.startAt, tt.args.endAt, tt.args.capacity)
 
 			if err != tt.wantErr {
 				t.Errorf("NewEvent() error = %v, wantErr %v", err, tt.wantErr)

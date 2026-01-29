@@ -8,14 +8,17 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mati/go-ticket/internal/domain"
+	"github.com/mati/go-ticket/internal/services"
 )
 
 type HTTPHandler struct {
-	eventRepository domain.EventRepository
+	eventRepository   domain.EventRepository
+	bookingRepository domain.BookingRepository
+	bookingService    *services.BookingService
 }
 
-func NewHTTPHandler(eventRepository domain.EventRepository) *HTTPHandler {
-	return &HTTPHandler{eventRepository: eventRepository}
+func NewHTTPHandler(eventRepository domain.EventRepository, bookingRepository domain.BookingRepository, bookingService *services.BookingService) *HTTPHandler {
+	return &HTTPHandler{eventRepository: eventRepository, bookingRepository: bookingRepository, bookingService: bookingService}
 }
 
 func (h *HTTPHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
@@ -225,4 +228,40 @@ func (h *HTTPHandler) responseError(w http.ResponseWriter, code int, message str
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(map[string]string{"error": message})
+}
+
+func (h *HTTPHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
+	eventIDStr := r.PathValue("event_id")
+	eventID, err := uuid.Parse(eventIDStr)
+	if err != nil {
+		h.responseError(w, http.StatusBadRequest, "invalid event id")
+		return
+	}
+
+	type request struct {
+		UserEmail string `json:"userEmail"`
+	}
+	var req request
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.responseError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	id := uuid.New()
+
+	booking, err := domain.NewBooking(id, eventID, req.UserEmail, domain.BookingStatusPending)
+	if err != nil {
+		h.responseError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = h.bookingService.CreateBooking(r.Context(), booking)
+	if err != nil {
+		h.responseError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(booking)
 }

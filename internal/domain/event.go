@@ -126,4 +126,5 @@ type EventRepository interface {
 	DeleteEvent(ctx context.Context, id uuid.UUID) error
 	GetEvent(ctx context.Context, id uuid.UUID) (*Event, error)
 	ListEvents(ctx context.Context) ([]*Event, error)
+	ReserveSpots(ctx context.Context, eventID uuid.UUID, spots int) error
 }

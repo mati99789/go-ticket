@@ -14,6 +14,7 @@ import (
 	"github.com/mati/go-ticket/internal/api"
 	"github.com/mati/go-ticket/internal/api/middleware"
 	"github.com/mati/go-ticket/internal/postgres"
+	"github.com/mati/go-ticket/internal/services"
 )
 
 func main() {
@@ -49,8 +50,10 @@ func run(logger *slog.Logger) any {
 	defer pool.Close()
 
 	queries := postgres.New(pool)
-	repo := postgres.NewEventRepository(queries)
-	eventHandler := api.NewHTTPHandler(repo)
+	eventRepository := postgres.NewEventRepository(queries)
+	bookingRepository := postgres.NewBookingRepository(queries)
+	bookingService := services.NewBookingService(eventRepository, bookingRepository, pool)
+	eventHandler := api.NewHTTPHandler(eventRepository, bookingRepository, bookingService)
 
 	mux := http.NewServeMux()
 
@@ -59,6 +62,7 @@ func run(logger *slog.Logger) any {
 	mux.HandleFunc("DELETE /events/{id}", eventHandler.DeleteEvent)
 	mux.HandleFunc("GET /events/{id}", eventHandler.GetEvent)
 	mux.HandleFunc("GET /events", eventHandler.ListEvents)
+	mux.HandleFunc("POST /events/{event_id}/bookings", eventHandler.CreateBooking)
 
 	srv := &http.Server{
 		Addr:         ":8080",

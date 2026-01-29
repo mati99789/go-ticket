@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mati/go-ticket/internal/domain"
 )
@@ -94,4 +95,8 @@ func (br *BookingRepository) ListBookings(ctx context.Context) ([]domain.Booking
 		bookings = append(bookings, *booking)
 	}
 	return bookings, nil
+}
+
+func (r *BookingRepository) WithTx(tx pgx.Tx) *BookingRepository {
+	return &BookingRepository{Queries: r.Queries.WithTx(tx)}
 }
