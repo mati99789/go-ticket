@@ -22,17 +22,19 @@ var (
 
 // Event represents an event in the system.
 type Event struct {
-	id        uuid.UUID
-	name      string
-	price     int64
-	startAt   time.Time
-	endAt     time.Time
-	createdAt time.Time
-	updatedAt time.Time
+	id             uuid.UUID
+	name           string
+	price          int64
+	startAt        time.Time
+	endAt          time.Time
+	createdAt      time.Time
+	updatedAt      time.Time
+	capacity       int
+	availableSpots int
 }
 
 // NewEvent creates a new validated Event.
-func NewEvent(id uuid.UUID, name string, price int64, startAt time.Time, endAt time.Time) (*Event, error) {
+func NewEvent(id uuid.UUID, name string, price int64, startAt time.Time, endAt time.Time, capacity int) (*Event, error) {
 	if id == uuid.Nil {
 		return nil, ErrEventIDNil
 	}
@@ -46,13 +48,15 @@ func NewEvent(id uuid.UUID, name string, price int64, startAt time.Time, endAt t
 		return nil, ErrEventStartAfterEnd
 	}
 	return &Event{
-		id:        id,
-		name:      name,
-		price:     price,
-		startAt:   startAt,
-		endAt:     endAt,
-		createdAt: time.Now(),
-		updatedAt: time.Now(),
+		id:             id,
+		name:           name,
+		price:          price,
+		startAt:        startAt,
+		endAt:          endAt,
+		createdAt:      time.Now(),
+		updatedAt:      time.Now(),
+		capacity:       capacity,
+		availableSpots: capacity,
 	}, nil
 }
 
@@ -97,12 +101,22 @@ func (e *Event) ID() uuid.UUID {
 	return e.id
 }
 
+// Capacity returns the event's capacity.
+func (e *Event) Capacity() int {
+	return e.capacity
+}
+
+// AvailableSpots returns the event's available spots.
+func (e *Event) AvailableSpots() int {
+	return e.availableSpots
+}
+
 // UnmarshalEvent creates an Event from the given parameters.
 func UnmarshalEvent(id uuid.UUID,
 	name string,
 	price int64,
-	startAt, endAt, createdAt, updatedAt time.Time) *Event {
-	return &Event{id, name, price, startAt, endAt, createdAt, updatedAt}
+	startAt, endAt, createdAt, updatedAt time.Time, capacity int, availableSpots int) *Event {
+	return &Event{id, name, price, startAt, endAt, createdAt, updatedAt, capacity, availableSpots}
 }
 
 // EventRepository defines the interface for event persistence.

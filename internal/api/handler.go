@@ -21,10 +21,11 @@ func NewHTTPHandler(eventRepository domain.EventRepository) *HTTPHandler {
 func (h *HTTPHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 
 	type request struct {
-		Name    string    `json:"name"`
-		Price   int64     `json:"price"`
-		StartAt time.Time `json:"startAt"`
-		EndAt   time.Time `json:"endAt"`
+		Name     string    `json:"name"`
+		Price    int64     `json:"price"`
+		StartAt  time.Time `json:"startAt"`
+		EndAt    time.Time `json:"endAt"`
+		Capacity int       `json:"capacity"`
 	}
 
 	var req request
@@ -35,7 +36,7 @@ func (h *HTTPHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := uuid.New()
-	event, err := domain.NewEvent(id, req.Name, req.Price, req.StartAt, req.EndAt)
+	event, err := domain.NewEvent(id, req.Name, req.Price, req.StartAt, req.EndAt, req.Capacity)
 
 	if err != nil {
 		h.responseError(w, http.StatusBadRequest, err.Error())

@@ -12,19 +12,21 @@ import (
 )
 
 const createEvent = `-- name: CreateEvent :one
-INSERT INTO events (id, name, price, start_at, end_at, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, name, price, start_at, end_at, created_at, updated_at
+INSERT INTO events (id, name, price, start_at, end_at, created_at, updated_at, capacity, available_spots)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING id, name, price, start_at, end_at, created_at, updated_at, capacity, available_spots
 `
 
 type CreateEventParams struct {
-	ID        pgtype.UUID        `json:"id"`
-	Name      string             `json:"name"`
-	Price     int64              `json:"price"`
-	StartAt   pgtype.Timestamptz `json:"start_at"`
-	EndAt     pgtype.Timestamptz `json:"end_at"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ID             pgtype.UUID        `json:"id"`
+	Name           string             `json:"name"`
+	Price          int64              `json:"price"`
+	StartAt        pgtype.Timestamptz `json:"start_at"`
+	EndAt          pgtype.Timestamptz `json:"end_at"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+	Capacity       int32              `json:"capacity"`
+	AvailableSpots int32              `json:"available_spots"`
 }
 
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
@@ -36,6 +38,8 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		arg.EndAt,
 		arg.CreatedAt,
 		arg.UpdatedAt,
+		arg.Capacity,
+		arg.AvailableSpots,
 	)
 	var i Event
 	err := row.Scan(
@@ -46,6 +50,8 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		&i.EndAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Capacity,
+		&i.AvailableSpots,
 	)
 	return i, err
 }
@@ -61,7 +67,7 @@ func (q *Queries) DeleteEvent(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getEvent = `-- name: GetEvent :one
-SELECT id, name, price, start_at, end_at, created_at, updated_at FROM events
+SELECT id, name, price, start_at, end_at, created_at, updated_at, capacity, available_spots FROM events
 WHERE id = $1
 `
 
@@ -76,12 +82,14 @@ func (q *Queries) GetEvent(ctx context.Context, id pgtype.UUID) (Event, error) {
 		&i.EndAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Capacity,
+		&i.AvailableSpots,
 	)
 	return i, err
 }
 
 const listEvents = `-- name: ListEvents :many
-SELECT id, name, price, start_at, end_at, created_at, updated_at FROM events
+SELECT id, name, price, start_at, end_at, created_at, updated_at, capacity, available_spots FROM events
 ORDER BY created_at DESC
 LIMIT $1 OFFSET $2
 `
@@ -108,6 +116,8 @@ func (q *Queries) ListEvents(ctx context.Context, arg ListEventsParams) ([]Event
 			&i.EndAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Capacity,
+			&i.AvailableSpots,
 		); err != nil {
 			return nil, err
 		}
@@ -119,11 +129,40 @@ func (q *Queries) ListEvents(ctx context.Context, arg ListEventsParams) ([]Event
 	return items, nil
 }
 
+const reserveSpots = `-- name: ReserveSpots :one
+UPDATE events
+SET available_spots = available_spots - $2
+WHERE id = $1 AND available_spots >= $2
+RETURNING id, name, price, start_at, end_at, created_at, updated_at, capacity, available_spots
+`
+
+type ReserveSpotsParams struct {
+	ID             pgtype.UUID `json:"id"`
+	AvailableSpots int32       `json:"available_spots"`
+}
+
+func (q *Queries) ReserveSpots(ctx context.Context, arg ReserveSpotsParams) (Event, error) {
+	row := q.db.QueryRow(ctx, reserveSpots, arg.ID, arg.AvailableSpots)
+	var i Event
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Price,
+		&i.StartAt,
+		&i.EndAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Capacity,
+		&i.AvailableSpots,
+	)
+	return i, err
+}
+
 const updateEvent = `-- name: UpdateEvent :one
 UPDATE events
-SET name = $2, price = $3, start_at = $4, end_at = $5, updated_at = $6
+SET name = $2, price = $3, start_at = $4, end_at = $5, updated_at = $6, capacity = $7
 WHERE id = $1
-RETURNING id, name, price, start_at, end_at, created_at, updated_at
+RETURNING id, name, price, start_at, end_at, created_at, updated_at, capacity, available_spots
 `
 
 type UpdateEventParams struct {
@@ -133,6 +172,7 @@ type UpdateEventParams struct {
 	StartAt   pgtype.Timestamptz `json:"start_at"`
 	EndAt     pgtype.Timestamptz `json:"end_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	Capacity  int32              `json:"capacity"`
 }
 
 func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event, error) {
@@ -143,6 +183,7 @@ func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event
 		arg.StartAt,
 		arg.EndAt,
 		arg.UpdatedAt,
+		arg.Capacity,
 	)
 	var i Event
 	err := row.Scan(
@@ -153,6 +194,8 @@ func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event
 		&i.EndAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Capacity,
+		&i.AvailableSpots,
 	)
 	return i, err
 }

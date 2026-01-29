@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/mati/go-ticket/internal/api"
+	"github.com/mati/go-ticket/internal/api/middleware"
 	"github.com/mati/go-ticket/internal/postgres"
 )
 
@@ -61,7 +62,7 @@ func run(logger *slog.Logger) any {
 
 	srv := &http.Server{
 		Addr:         ":8080",
-		Handler:      mux,
+		Handler:      middleware.LoggingMiddleware(middleware.RecoveryMiddleware(mux)),
 		WriteTimeout: 10 * time.Second,
 		ReadTimeout:  5 * time.Second,
 		IdleTimeout:  60 * time.Second,

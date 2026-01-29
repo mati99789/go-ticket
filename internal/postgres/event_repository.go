@@ -25,13 +25,15 @@ func (r *EventRepository) CreateEvent(ctx context.Context, event *domain.Event) 
 	startAt, endAt := event.StartAndEndAt()
 
 	params := CreateEventParams{
-		ID:        pgtype.UUID{Bytes: event.ID(), Valid: true},
-		Name:      event.Name(),
-		Price:     event.Price(),
-		StartAt:   pgtype.Timestamptz{Time: startAt, Valid: true},
-		EndAt:     pgtype.Timestamptz{Time: endAt, Valid: true},
-		CreatedAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		UpdatedAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		ID:             pgtype.UUID{Bytes: event.ID(), Valid: true},
+		Name:           event.Name(),
+		Price:          event.Price(),
+		StartAt:        pgtype.Timestamptz{Time: startAt, Valid: true},
+		EndAt:          pgtype.Timestamptz{Time: endAt, Valid: true},
+		CreatedAt:      pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		UpdatedAt:      pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		Capacity:       int32(event.Capacity()),
+		AvailableSpots: int32(event.AvailableSpots()),
 	}
 
 	_, err := r.queries.CreateEvent(ctx, params)
@@ -49,6 +51,7 @@ func (r *EventRepository) UpdateEvent(ctx context.Context, event *domain.Event) 
 		StartAt:   pgtype.Timestamptz{Time: startAt, Valid: true},
 		EndAt:     pgtype.Timestamptz{Time: endAt, Valid: true},
 		UpdatedAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		Capacity:  int32(event.Capacity()),
 	}
 
 	_, err := r.queries.UpdateEvent(ctx, params)
@@ -77,6 +80,8 @@ func (r *EventRepository) GetEvent(ctx context.Context, id uuid.UUID) (*domain.E
 		row.EndAt.Time,
 		row.CreatedAt.Time,
 		row.UpdatedAt.Time,
+		int(row.Capacity),
+		int(row.AvailableSpots),
 	), nil
 }
 
@@ -100,6 +105,8 @@ func (r *EventRepository) ListEvents(ctx context.Context) ([]*domain.Event, erro
 			row.EndAt.Time,
 			row.CreatedAt.Time,
 			row.UpdatedAt.Time,
+			int(row.Capacity),
+			int(row.AvailableSpots),
 		)
 		events = append(events, event)
 	}

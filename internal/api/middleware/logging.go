@@ -31,20 +31,20 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 type ResponseRecord struct {
 	http.ResponseWriter
 	Status  int
-	Writter bool
+	Written bool
 }
 
 func (r *ResponseRecord) WriteHeader(status int) {
-	if r.Writter {
+	if r.Written {
 		return
 	}
 	r.Status = status
-	r.Writter = true
+	r.Written = true
 	r.ResponseWriter.WriteHeader(status)
 }
 
 func (r *ResponseRecord) Write(b []byte) (int, error) {
-	if !r.Writter {
+	if !r.Written {
 		r.WriteHeader(http.StatusOK)
 	}
 	return r.ResponseWriter.Write(b)

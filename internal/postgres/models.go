@@ -8,12 +8,23 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Event struct {
+type Booking struct {
 	ID        pgtype.UUID        `json:"id"`
-	Name      string             `json:"name"`
-	Price     int64              `json:"price"`
-	StartAt   pgtype.Timestamptz `json:"start_at"`
-	EndAt     pgtype.Timestamptz `json:"end_at"`
+	EventID   pgtype.UUID        `json:"event_id"`
+	UserEmail string             `json:"user_email"`
+	Status    string             `json:"status"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type Event struct {
+	ID             pgtype.UUID        `json:"id"`
+	Name           string             `json:"name"`
+	Price          int64              `json:"price"`
+	StartAt        pgtype.Timestamptz `json:"start_at"`
+	EndAt          pgtype.Timestamptz `json:"end_at"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+	Capacity       int32              `json:"capacity"`
+	AvailableSpots int32              `json:"available_spots"`
 }
