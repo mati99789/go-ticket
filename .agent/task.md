@@ -36,8 +36,20 @@
 
 ## Phase 4: Polish & Production Standards
 
-- [ ] Refactor: DTO Layer (czyste odpowiedzi JSON). <!-- id: 20 -->
+- [x] Refactor: DTO Layer (czyste odpowiedzi JSON). <!-- id: 20 -->
 - [ ] Refactor: Advanced Error Mapping (Domain Errors). <!-- id: 21 -->
+- [ ] **Pagination & Query Parameters**: <!-- id: 37 -->
+  - [ ] Implement pagination (limit, offset) for ListEvents. <!-- id: 38 -->
+  - [ ] Add filtering (by date range, price range). <!-- id: 39 -->
+  - [ ] Add sorting (by name, price, date). <!-- id: 40 -->
+  - [ ] Cursor-based pagination (for high performance). <!-- id: 41 -->
+- [ ] **Authentication & Authorization**: <!-- id: 30 -->
+  - [ ] User Registration & Login (JWT). <!-- id: 31 -->
+  - [ ] Password hashing (bcrypt). <!-- id: 32 -->
+  - [ ] JWT Middleware (protected routes). <!-- id: 33 -->
+  - [ ] RBAC implementation (admin/organizer/user roles). <!-- id: 34 -->
+  - [ ] OAuth2 integration (Google/GitHub). <!-- id: 35 -->
+  - [ ] Refresh Token mechanism (Redis). <!-- id: 36 -->
 - [ ] Automatyzacja migracji w kodzie (Embedded migrations). <!-- id: 17 -->
 - [ ] Testy integracyjne (Database tests). <!-- id: 22 -->
 
@@ -47,3 +59,13 @@
 - [ ] GitHub Actions (CI pipelines). <!-- id: 14 -->
 - [ ] Provisioning AWS (Terraform/OpenTofu). <!-- id: 15 -->
 - [ ] Deploy na AWS. <!-- id: 16 -->
+
+## Phase 6: Senior Upgrades (The "Antigravity" Audit)
+
+- [ ] **Tests**: Integration Tests (Testcontainers) for EventRepository. <!-- id: 23 -->
+- [ ] **Docs**: Swagger/OpenAPI documentation. <!-- id: 24 -->
+- [ ] **API**: GraphQL Layer (gqlgen). <!-- id: 25 -->
+- [ ] **Cache**: Redis implementation. <!-- id: 26 -->
+- [ ] **Async**: RabbitMQ/Kafka for Domain Events. <!-- id: 27 -->
+- [ ] **Prod**: Multi-stage Dockerfile (Distroless). <!-- id: 28 -->
+- [ ] **Automation**: Makefile. <!-- id: 29 -->
