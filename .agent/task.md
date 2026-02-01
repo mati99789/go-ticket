@@ -37,7 +37,7 @@
 ## Phase 4: Polish & Production Standards
 
 - [x] Refactor: DTO Layer (czyste odpowiedzi JSON). <!-- id: 20 -->
-- [ ] Refactor: Advanced Error Mapping (Domain Errors). <!-- id: 21 -->
+- [x] Refactor: Advanced Error Mapping (Domain Errors). <!-- id: 21 -->
 - [ ] **Pagination & Query Parameters**: <!-- id: 37 -->
   - [ ] Implement pagination (limit, offset) for ListEvents. <!-- id: 38 -->
   - [ ] Add filtering (by date range, price range). <!-- id: 39 -->
@@ -56,6 +56,12 @@
 ## Phase 5: DevOps & Cloud
 
 - [ ] Konteneryzacja (Dockerfile, Docker Compose dla całości). <!-- id: 13 -->
+- [ ] **Observability & Monitoring**: <!-- id: 42 -->
+  - [ ] Prometheus metrics (HTTP, business metrics). <!-- id: 43 -->
+  - [ ] Grafana dashboards (API performance, business KPIs). <!-- id: 44 -->
+  - [ ] Structured logging with slog (JSON output). <!-- id: 45 -->
+  - [ ] Distributed tracing (OpenTelemetry). <!-- id: 46 -->
+  - [ ] Health check endpoints (/health, /ready). <!-- id: 47 -->
 - [ ] GitHub Actions (CI pipelines). <!-- id: 14 -->
 - [ ] Provisioning AWS (Terraform/OpenTofu). <!-- id: 15 -->
 - [ ] Deploy na AWS. <!-- id: 16 -->

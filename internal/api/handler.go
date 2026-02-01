@@ -34,14 +34,16 @@ func (h *HTTPHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	event, err := domain.NewEvent(id, req.Name, req.Price, req.StartAt, req.EndAt, req.Capacity)
 
 	if err != nil {
-		h.responseError(w, http.StatusBadRequest, err.Error())
+		code, message := MapDomainError(err)
+		h.responseError(w, code, message)
 		return
 	}
 
 	err = h.eventRepository.CreateEvent(r.Context(), event)
 	if err != nil {
 		slog.Error("Failed to create event", "error", err)
-		h.responseError(w, http.StatusInternalServerError, "Something went wrong")
+		code, message := MapDomainError(err)
+		h.responseError(w, code, message)
 		return
 	}
 
@@ -66,33 +68,38 @@ func (h *HTTPHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	var req dto.UpdateEventRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.responseError(w, http.StatusBadRequest, "invalid request body")
+		code, message := MapDomainError(err)
+		h.responseError(w, code, message)
 		return
 	}
 
 	event, err := h.eventRepository.GetEvent(r.Context(), parsedId)
 	if err != nil {
 		slog.Error("Failed to get event", "error", err)
-		h.responseError(w, http.StatusInternalServerError, "Something went wrong")
+		code, message := MapDomainError(err)
+		h.responseError(w, code, message)
 		return
 	}
 
 	err = event.UpdateName(req.Name)
 	if err != nil {
-		h.responseError(w, http.StatusBadRequest, err.Error())
+		code, message := MapDomainError(err)
+		h.responseError(w, code, message)
 		return
 	}
 
 	err = event.Reschedule(req.StartAt, req.EndAt)
 	if err != nil {
-		h.responseError(w, http.StatusBadRequest, err.Error())
+		code, message := MapDomainError(err)
+		h.responseError(w, code, message)
 		return
 	}
 
 	err = h.eventRepository.UpdateEvent(r.Context(), event)
 	if err != nil {
 		slog.Error("Failed to update event", "error", err)
-		h.responseError(w, http.StatusInternalServerError, "Something went wrong")
+		code, message := MapDomainError(err)
+		h.responseError(w, code, message)
 		return
 	}
 
@@ -115,7 +122,8 @@ func (h *HTTPHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	err = h.eventRepository.DeleteEvent(r.Context(), parsedId)
 	if err != nil {
 		slog.Error("Failed to delete event", "error", err)
-		h.responseError(w, http.StatusInternalServerError, "Something went wrong")
+		code, message := MapDomainError(err)
+		h.responseError(w, code, message)
 		return
 	}
 
@@ -138,7 +146,8 @@ func (h *HTTPHandler) GetEvent(w http.ResponseWriter, r *http.Request) {
 	event, err := h.eventRepository.GetEvent(r.Context(), parsedId)
 	if err != nil {
 		slog.Error("Failed to get event", "error", err)
-		h.responseError(w, http.StatusInternalServerError, "Something went wrong")
+		code, message := MapDomainError(err)
+		h.responseError(w, code, message)
 		return
 	}
 
@@ -148,7 +157,8 @@ func (h *HTTPHandler) GetEvent(w http.ResponseWriter, r *http.Request) {
 	err = json.NewEncoder(w).Encode(resp)
 	w.WriteHeader(http.StatusOK)
 	if err != nil {
-		h.responseError(w, http.StatusInternalServerError, "Something went wrong")
+		code, message := MapDomainError(err)
+		h.responseError(w, code, message)
 		return
 	}
 
@@ -159,7 +169,8 @@ func (h *HTTPHandler) ListEvents(w http.ResponseWriter, r *http.Request) {
 	events, err := h.eventRepository.ListEvents(r.Context())
 	if err != nil {
 		slog.Error("Failed to list events", "error", err)
-		h.responseError(w, http.StatusInternalServerError, "Something went wrong")
+		code, message := MapDomainError(err)
+		h.responseError(w, code, message)
 		return
 	}
 
@@ -169,7 +180,8 @@ func (h *HTTPHandler) ListEvents(w http.ResponseWriter, r *http.Request) {
 	err = json.NewEncoder(w).Encode(resp)
 	w.WriteHeader(http.StatusOK)
 	if err != nil {
-		h.responseError(w, http.StatusInternalServerError, "Something went wrong")
+		code, message := MapDomainError(err)
+		h.responseError(w, code, message)
 		return
 	}
 
@@ -185,14 +197,16 @@ func (h *HTTPHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	eventIDStr := r.PathValue("event_id")
 	eventID, err := uuid.Parse(eventIDStr)
 	if err != nil {
-		h.responseError(w, http.StatusBadRequest, "invalid event id")
+		code, message := MapDomainError(err)
+		h.responseError(w, code, message)
 		return
 	}
 
 	var req dto.CreateBookingRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.responseError(w, http.StatusBadRequest, "invalid request body")
+		code, message := MapDomainError(err)
+		h.responseError(w, code, message)
 		return
 	}
 
@@ -200,13 +214,15 @@ func (h *HTTPHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 
 	booking, err := domain.NewBooking(id, eventID, req.UserEmail, domain.BookingStatusPending)
 	if err != nil {
-		h.responseError(w, http.StatusBadRequest, err.Error())
+		code, message := MapDomainError(err)
+		h.responseError(w, code, message)
 		return
 	}
 
 	err = h.bookingService.CreateBooking(r.Context(), booking)
 	if err != nil {
-		h.responseError(w, http.StatusInternalServerError, err.Error())
+		code, message := MapDomainError(err)
+		h.responseError(w, code, message)
 		return
 	}
 

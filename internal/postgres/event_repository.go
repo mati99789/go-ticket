@@ -3,6 +3,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -70,7 +71,7 @@ func (r *EventRepository) GetEvent(ctx context.Context, id uuid.UUID) (*domain.E
 	row, err := r.queries.GetEvent(ctx, pgtype.UUID{Bytes: id, Valid: true})
 
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrEventNotFound
 	}
 
 	return domain.UnmarshalEvent(
@@ -93,7 +94,7 @@ func (r *EventRepository) ListEvents(ctx context.Context) ([]*domain.Event, erro
 		Offset: 0,
 	})
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrEventNotFound
 	}
 
 	var events []*domain.Event
@@ -119,7 +120,13 @@ func (r *EventRepository) ReserveSpots(ctx context.Context, eventID uuid.UUID, s
 		ID:             pgtype.UUID{Bytes: eventID, Valid: true},
 		AvailableSpots: int32(spots),
 	})
-	return err
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.ErrEventIsFull
+		}
+		return err
+	}
+	return nil
 }
 
 func (r *EventRepository) WithTx(tx pgx.Tx) *EventRepository {

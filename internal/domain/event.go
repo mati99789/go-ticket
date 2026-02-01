@@ -3,21 +3,9 @@ package domain
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
-)
-
-var (
-	// ErrEventNameEmpty is returned when the name is empty.
-	ErrEventNameEmpty = errors.New("name is empty")
-	// ErrEventPriceNegative is returned when the price is negative.
-	ErrEventPriceNegative = errors.New("price is negative")
-	// ErrEventStartAfterEnd is returned when the start time is after the end time.
-	ErrEventStartAfterEnd = errors.New("startAt is after endAt")
-	// ErrEventIDNil is returned when the id is nil.
-	ErrEventIDNil = errors.New("id is nil")
 )
 
 // Event represents an event in the system.

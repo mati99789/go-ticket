@@ -16,13 +16,6 @@ const (
 	BookingStatusCancelled BookingStatus = "cancelled"
 )
 
-var (
-	ErrBookingIDNil          = errors.New("id is nil")
-	ErrBookingEventIDInvalid = errors.New("eventID is invalid")
-	ErrBookingUserEmailEmpty = errors.New("userEmail is empty")
-	ErrBookingStatusInvalid  = errors.New("invalid status")
-)
-
 type Booking struct {
 	id        uuid.UUID
 	eventID   uuid.UUID
