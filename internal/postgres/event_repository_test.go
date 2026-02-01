@@ -14,13 +14,13 @@ import (
 func TestEventRepository_CreateEvent(t *testing.T) {
 	ctx := context.Background()
 
-	pool := setupDb(ctx, t)
+	pool := SetupDb(ctx, t)
 
 	//Create event
-	event := createTestEvent(ctx, t, pool)
+	event := CreateTestEvent(ctx, t, pool)
 
 	//Get event
-	retrieved := getEventFromDB(ctx, t, pool, event.ID())
+	retrieved := GetEventFromDB(ctx, t, pool, event.ID())
 
 	assert.Equal(t, event.ID(), retrieved.ID())
 	assert.Equal(t, event.Name(), retrieved.Name())
@@ -29,7 +29,7 @@ func TestEventRepository_CreateEvent(t *testing.T) {
 
 func TestEventRepository_GetEvent_NotFound(t *testing.T) {
 	ctx := context.Background()
-	pool := setupDb(ctx, t)
+	pool := SetupDb(ctx, t)
 
 	fakeID := uuid.New()
 	queries := New(pool)
@@ -44,10 +44,10 @@ func TestEventRepository_GetEvent_NotFound(t *testing.T) {
 
 func TestEventRepository_ReserveSpots_Success(t *testing.T) {
 	ctx := context.Background()
-	pool := setupDb(ctx, t)
+	pool := SetupDb(ctx, t)
 
 	//Create event
-	event := createTestEvent(ctx, t, pool, withCapacity(100))
+	event := CreateTestEvent(ctx, t, pool, WithCapacity(100))
 
 	queries := New(pool)
 	eventRepository := NewEventRepository(queries)
@@ -55,7 +55,7 @@ func TestEventRepository_ReserveSpots_Success(t *testing.T) {
 	//Reserve spots
 	err := eventRepository.ReserveSpots(ctx, event.ID(), 10)
 
-	retrieved := getEventFromDB(ctx, t, pool, event.ID())
+	retrieved := GetEventFromDB(ctx, t, pool, event.ID())
 
 	assert.NoError(t, err)
 	assert.Equal(t, 90, retrieved.AvailableSpots())
@@ -63,10 +63,10 @@ func TestEventRepository_ReserveSpots_Success(t *testing.T) {
 
 func TestEventRepository_ReserveSpots_NotEnough(t *testing.T) {
 	ctx := context.Background()
-	pool := setupDb(ctx, t)
+	pool := SetupDb(ctx, t)
 
 	//Create event
-	event := createTestEvent(ctx, t, pool, withCapacity(5))
+	event := CreateTestEvent(ctx, t, pool, WithCapacity(5))
 
 	queries := New(pool)
 	eventRepository := NewEventRepository(queries)
@@ -76,17 +76,17 @@ func TestEventRepository_ReserveSpots_NotEnough(t *testing.T) {
 
 	assert.Error(t, err)
 
-	retrieved := getEventFromDB(ctx, t, pool, event.ID())
+	retrieved := GetEventFromDB(ctx, t, pool, event.ID())
 	assert.Equal(t, retrieved.AvailableSpots(), 5)
 	assert.ErrorIs(t, err, domain.ErrEventIsFull)
 }
 
 func TestEventRepository_ReserveSpots_Concurrent(t *testing.T) {
 	ctx := context.Background()
-	pool := setupDb(ctx, t)
+	pool := SetupDb(ctx, t)
 
 	//Create event
-	event := createTestEvent(ctx, t, pool, withCapacity(100))
+	event := CreateTestEvent(ctx, t, pool, WithCapacity(100))
 
 	queries := New(pool)
 	eventRepository := NewEventRepository(queries)
@@ -110,7 +110,7 @@ func TestEventRepository_ReserveSpots_Concurrent(t *testing.T) {
 
 	assert.Equal(t, successCount.Load(), int32(100))
 
-	retrieved := getEventFromDB(ctx, t, pool, event.ID())
+	retrieved := GetEventFromDB(ctx, t, pool, event.ID())
 
 	assert.Equal(t, retrieved.AvailableSpots(), 0)
 }

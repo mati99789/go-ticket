@@ -239,7 +239,7 @@ internal/api            coverage: 78.9%
 
 ## 🤝 Contributing
 
-This is a mentorship project following the **"Zero Gotowego Kodu"** (No Ready Code) rule. The mentor provides guidance, pseudocode, and architecture decisions, but all code is written by the mentee.
+This is a mentorship project following the **"FROM ZERO TO GO EXPERT"** (No Ready Code) rule. The mentor provides guidance, pseudocode, and architecture decisions, but all code is written by the mentee.
 
 ## 📄 License
 

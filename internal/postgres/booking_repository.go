@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -35,6 +36,9 @@ func (br *BookingRepository) CreateBooking(ctx context.Context, booking *domain.
 func (br *BookingRepository) GetBookingByID(ctx context.Context, id uuid.UUID) (*domain.Booking, error) {
 	row, err := br.Queries.GetBookingByID(ctx, pgtype.UUID{Bytes: id, Valid: true})
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrBookingNotFound
+		}
 		return nil, err
 	}
 	return domain.UnmarshalBooking(

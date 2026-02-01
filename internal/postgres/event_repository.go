@@ -122,6 +122,10 @@ func (r *EventRepository) ReserveSpots(ctx context.Context, eventID uuid.UUID, s
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
+			_, errGet := r.queries.GetEvent(ctx, pgtype.UUID{Bytes: eventID, Valid: true})
+			if errGet != nil {
+				return domain.ErrEventNotFound
+			}
 			return domain.ErrEventIsFull
 		}
 		return err

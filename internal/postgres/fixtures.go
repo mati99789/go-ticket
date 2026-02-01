@@ -20,37 +20,37 @@ type EventConfig struct {
 	Capacity int
 }
 
-func withName(name string) EventOptions {
+func WithName(name string) EventOptions {
 	return func(config *EventConfig) {
 		config.Name = name
 	}
 }
 
-func withPrice(price int64) EventOptions {
+func WithPrice(price int64) EventOptions {
 	return func(config *EventConfig) {
 		config.Price = price
 	}
 }
 
-func withStartAt(startAt time.Time) EventOptions {
+func WithStartAt(startAt time.Time) EventOptions {
 	return func(config *EventConfig) {
 		config.StartAt = startAt
 	}
 }
 
-func withEndAt(endAt time.Time) EventOptions {
+func WithEndAt(endAt time.Time) EventOptions {
 	return func(config *EventConfig) {
 		config.EndAt = endAt
 	}
 }
 
-func withCapacity(capacity int) EventOptions {
+func WithCapacity(capacity int) EventOptions {
 	return func(config *EventConfig) {
 		config.Capacity = capacity
 	}
 }
 
-func createTestEvent(ctx context.Context, t *testing.T, pool *pgxpool.Pool, options ...EventOptions) *domain.Event {
+func CreateTestEvent(ctx context.Context, t *testing.T, pool *pgxpool.Pool, options ...EventOptions) *domain.Event {
 	t.Helper()
 
 	config := &EventConfig{
@@ -83,7 +83,7 @@ func createTestEvent(ctx context.Context, t *testing.T, pool *pgxpool.Pool, opti
 	return newEvent
 }
 
-func getBookingFromDB(ctx context.Context, t *testing.T, pool *pgxpool.Pool, eventID uuid.UUID) *domain.Booking {
+func GetBookingFromDB(ctx context.Context, t *testing.T, pool *pgxpool.Pool, eventID uuid.UUID) *domain.Booking {
 	t.Helper()
 
 	queries := New(pool)
@@ -98,7 +98,7 @@ func getBookingFromDB(ctx context.Context, t *testing.T, pool *pgxpool.Pool, eve
 	return booking
 }
 
-func getEventFromDB(ctx context.Context, t *testing.T, pool *pgxpool.Pool, eventID uuid.UUID) *domain.Event {
+func GetEventFromDB(ctx context.Context, t *testing.T, pool *pgxpool.Pool, eventID uuid.UUID) *domain.Event {
 	t.Helper()
 
 	queries := New(pool)

@@ -2,11 +2,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
-	"os"
-	"path/filepath"
-	"sort"
-	"strings"
 	"testing"
 	"time"
 
@@ -16,7 +11,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-func setupDb(ctx context.Context, t *testing.T) *pgxpool.Pool {
+func SetupDb(ctx context.Context, t *testing.T) *pgxpool.Pool {
 	t.Helper()
 
 	container, err := postgres.Run(ctx,
@@ -45,8 +40,7 @@ func setupDb(ctx context.Context, t *testing.T) *pgxpool.Pool {
 		t.Fatalf("failed to create connection pool: %v", err)
 	}
 
-	migrationPath := "../../migrations"
-	if err := runMigrations(ctx, t, pool, migrationPath); err != nil {
+	if err := RunMigrations(conntStr); err != nil {
 		t.Fatalf("failed to run migrations: %v", err)
 	}
 
@@ -60,51 +54,4 @@ func setupDb(ctx context.Context, t *testing.T) *pgxpool.Pool {
 
 	return pool
 
-}
-
-func runMigrations(ctx context.Context, t *testing.T, pool *pgxpool.Pool, migrationPath string) error {
-	t.Helper()
-
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-
-	if _, err := os.Stat(migrationPath); os.IsNotExist(err) {
-		return fmt.Errorf("migration path %s does not exist", migrationPath)
-	}
-
-	files, err := os.ReadDir(migrationPath)
-	if err != nil {
-		return err
-	}
-
-	var migration []os.DirEntry
-	for _, file := range files {
-		if strings.HasSuffix(file.Name(), ".up.sql") {
-			migration = append(migration, file)
-		}
-	}
-
-	sort.Slice(migration, func(i, j int) bool {
-		return migration[i].Name() < migration[j].Name()
-	})
-
-	if len(migration) == 0 {
-		t.Logf("no migrations found in %s", migrationPath)
-		return nil
-	}
-
-	for _, file := range migration {
-		sql, err := os.ReadFile(filepath.Join(migrationPath, file.Name()))
-		if err != nil {
-			return fmt.Errorf("failed to read migration file %s: %v", file.Name(), err)
-		}
-		_, err = pool.Exec(ctx, string(sql))
-		if err != nil {
-			return fmt.Errorf("failed to execute migration file %s: %v", file.Name(), err)
-		}
-
-		t.Logf("migrated %s", file.Name())
-	}
-
-	return nil
 }
