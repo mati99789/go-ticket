@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -25,10 +26,9 @@ func main() {
 		slog.Error("Application error", "error", err)
 		os.Exit(1)
 	}
-
 }
 
-func run(logger *slog.Logger) any {
+func run(logger *slog.Logger) error {
 	// Load environment variables from .env file
 	if err := godotenv.Load(); err != nil {
 		logger.Warn("Failed to load environment variables", "error", err)
@@ -45,10 +45,18 @@ func run(logger *slog.Logger) any {
 
 	pool, err := pgxpool.New(ctx, dbUrl)
 	if err != nil {
-		return errors.New("failed to create database connection pool")
+		return fmt.Errorf("failed to create database connection pool: %w", err)
 	}
 	defer pool.Close()
 
+	// Run database migrations
+	logger.Info("Running database migrations...")
+	if err := postgres.RunMigrations(dbUrl); err != nil {
+		return fmt.Errorf("failed to run migrations: %w", err)
+	}
+	logger.Info("Database migrations completed")
+
+	// Create repositories and services
 	queries := postgres.New(pool)
 	eventRepository := postgres.NewEventRepository(queries)
 	bookingRepository := postgres.NewBookingRepository(queries)
@@ -93,9 +101,9 @@ func run(logger *slog.Logger) any {
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		logger.Error("Failed to shutdown server", "error", err)
-		return errors.New("failed to shutdown server")
+		return fmt.Errorf("failed to shutdown server: %w", err)
 	}
-	logger.Info("Server shutdown")
+
+	logger.Info("Server shutdown successfully")
 	return nil
 }

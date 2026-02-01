@@ -50,8 +50,12 @@
   - [ ] RBAC implementation (admin/organizer/user roles). <!-- id: 34 -->
   - [ ] OAuth2 integration (Google/GitHub). <!-- id: 35 -->
   - [ ] Refresh Token mechanism (Redis). <!-- id: 36 -->
-- [ ] Automatyzacja migracji w kodzie (Embedded migrations). <!-- id: 17 -->
-- [ ] Testy integracyjne (Database tests). <!-- id: 22 -->
+- [x] Automatyzacja migracji w kodzie (Embedded migrations). <!-- id: 17 -->
+- [/] Testy integracyjne (Database tests). <!-- id: 22 -->
+  - [x] Test Infrastructure (Testcontainers, fixtures)
+  - [x] EventRepository tests (CRUD, race conditions)
+  - [ ] BookingService tests (transactions)
+  - [ ] Handler tests (end-to-end API)
 
 ## Phase 5: DevOps & Cloud
 
