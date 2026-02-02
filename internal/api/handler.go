@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -8,16 +9,19 @@ import (
 	"github.com/google/uuid"
 	"github.com/mati/go-ticket/internal/api/dto"
 	"github.com/mati/go-ticket/internal/domain"
-	"github.com/mati/go-ticket/internal/services"
 )
+
+type CreateBookingService interface {
+	CreateBooking(ctx context.Context, booking *domain.Booking) error
+}
 
 type HTTPHandler struct {
 	eventRepository   domain.EventRepository
 	bookingRepository domain.BookingRepository
-	bookingService    *services.BookingService
+	bookingService    CreateBookingService
 }
 
-func NewHTTPHandler(eventRepository domain.EventRepository, bookingRepository domain.BookingRepository, bookingService *services.BookingService) *HTTPHandler {
+func NewHTTPHandler(eventRepository domain.EventRepository, bookingRepository domain.BookingRepository, bookingService CreateBookingService) *HTTPHandler {
 	return &HTTPHandler{eventRepository: eventRepository, bookingRepository: bookingRepository, bookingService: bookingService}
 }
 

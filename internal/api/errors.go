@@ -17,7 +17,7 @@ func MapDomainError(err error) (statusCode int, message string) {
 
 	// Event errors - Bad Request (400)
 	case errors.Is(err, domain.ErrEventIsFull):
-		return http.StatusBadRequest, "Event is full, no available spots"
+		return http.StatusConflict, "Event is full, no available spots"
 
 	case errors.Is(err, domain.ErrEventNameEmpty):
 		return http.StatusBadRequest, "Event name cannot be empty"
