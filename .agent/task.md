@@ -42,9 +42,16 @@
 
 ## Phase 4: Security & Advanced Logic
 
-- [ ] **Authentication & Authorization**: <!-- id: 30 -->
-  - [ ] User Registration & Login (JWT). <!-- id: 31 -->
-  - [ ] Password hashing (bcrypt). <!-- id: 32 -->
+- [/] **Authentication & Authorization**: <!-- id: 31 -->
+  - [/] User Registration & Login (JWT). <!-- id: 30 -->
+    - [x] User Domain Entity (`internal/domain/user.go`) - validation, roles (user/admin/organizer)
+    - [x] Database Migration (`000003_add_user_table.up.sql`) - users table with ENUM roles
+    - [x] Password Hashing (`internal/auth/password.go`) - bcrypt implementation
+    - [x] JWT Token Generation (`internal/auth/jwt.go`) - GenerateToken, VerifyToken
+    - [x] SQLC Queries (`internal/postgres/queries/users.sql`) - CreateUser, GetUserByEmail, etc.
+    - [ ] User Repository (`internal/postgres/user_repository.go`) - **IN PROGRESS**
+    - [ ] Auth Handler (`internal/api/auth_handler.go`) - /register, /login endpoints
+    - [ ] Wire Auth endpoints in main.go
   - [ ] JWT Middleware (protected routes). <!-- id: 33 -->
   - [ ] RBAC implementation (admin/organizer/user roles). <!-- id: 34 -->
 - [ ] **Security Middleware**: <!-- id: 35 -->
@@ -71,3 +78,26 @@
 - [ ] **Cache**: Redis implementation (Caching & Distributed Locks). <!-- id: 11 -->
 - [ ] **Async**: Kafka/RabbitMQ for Domain Events. <!-- id: 27 -->
 - [ ] **Microservices**: Extracting Notification/Payment Service. <!-- id: 28 -->
+
+## Phase 7: Production Polish (High-Impact Additions)
+
+> **Goal:** Add critical production features with high impact and low effort.
+> **Estimated Time:** 2-3 weeks (part-time)
+
+- [ ] **Health Checks**: <!-- id: 51 -->
+  - [ ] `/health` endpoint (basic health check). <!-- id: 52 -->
+  - [ ] `/readiness` endpoint (K8s readiness probe). <!-- id: 53 -->
+  - [ ] `/liveness` endpoint (K8s liveness probe). <!-- id: 54 -->
+- [ ] **HTTPS/TLS**: <!-- id: 55 -->
+  - [ ] cert-manager setup in K8s. <!-- id: 56 -->
+  - [ ] Let's Encrypt integration. <!-- id: 57 -->
+- [ ] **Secrets Management**: <!-- id: 58 -->
+  - [ ] K8s Secrets configuration. <!-- id: 59 -->
+  - [ ] Sealed Secrets (GitOps-friendly). <!-- id: 60 -->
+- [ ] **Error Tracking**: <!-- id: 61 -->
+  - [ ] Sentry integration (free tier). <!-- id: 62 -->
+  - [ ] Error reporting middleware. <!-- id: 63 -->
+- [ ] **Resilience Patterns**: <!-- id: 64 -->
+  - [ ] Circuit Breaker implementation (go-resilience). <!-- id: 65 -->
+  - [ ] Retry Logic with exponential backoff. <!-- id: 66 -->
+  - [ ] Timeout configuration for external calls. <!-- id: 67 -->

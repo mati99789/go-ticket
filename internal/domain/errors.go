@@ -29,3 +29,13 @@ var (
 	// ErrBookingStatusInvalid is returned when the status is invalid.
 	ErrBookingStatusInvalid = errors.New("invalid status")
 )
+
+// User errors
+var (
+	ErrUserEmailEmpty         = errors.New("email is empty")
+	ErrUserPasswordEmpty      = errors.New("password is empty")
+	ErrUserRoleInvalid        = errors.New("invalid role")
+	ErrUserIDNil              = errors.New("id is nil")
+	ErrUserEmailAlreadyExists = errors.New("email already exists")
+	ErrUserEmailInvalid       = errors.New("invalid email")
+)

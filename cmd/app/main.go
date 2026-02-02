@@ -35,8 +35,13 @@ func run(logger *slog.Logger) error {
 	}
 
 	dbUrl := os.Getenv("DATABASE_URL")
+	secretKey := os.Getenv("JWT_SECRET_KEY")
+
 	if dbUrl == "" {
 		return errors.New("DATABASE_URL is not set")
+	}
+	if secretKey == "" {
+		return errors.New("JWT_SECRET_KEY is not set")
 	}
 
 	// Create database connection pool

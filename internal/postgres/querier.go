@@ -15,15 +15,21 @@ type Querier interface {
 	ConfirmBooking(ctx context.Context, id pgtype.UUID) (Booking, error)
 	CreateBooking(ctx context.Context, arg CreateBookingParams) (Booking, error)
 	CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error)
+	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteBooking(ctx context.Context, id pgtype.UUID) error
 	DeleteEvent(ctx context.Context, id pgtype.UUID) error
+	DeleteUser(ctx context.Context, id pgtype.UUID) error
 	GetBookingByID(ctx context.Context, id pgtype.UUID) (Booking, error)
 	GetEvent(ctx context.Context, id pgtype.UUID) (Event, error)
+	GetUserByEmail(ctx context.Context, email string) (User, error)
+	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	ListBookings(ctx context.Context, arg ListBookingsParams) ([]Booking, error)
 	ListEvents(ctx context.Context, arg ListEventsParams) ([]Event, error)
+	ListUsers(ctx context.Context) ([]User, error)
 	ReserveSpots(ctx context.Context, arg ReserveSpotsParams) (Event, error)
 	UpdateBooking(ctx context.Context, arg UpdateBookingParams) (Booking, error)
 	UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event, error)
+	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 }
 
 var _ Querier = (*Queries)(nil)

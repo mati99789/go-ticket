@@ -76,6 +76,27 @@ Refactoring the monolith into distributed services.
 - [ ] **Async Messaging**: Implement RabbitMQ/Kafka for "BookingConfirmed" events.
 - [ ] **Saga Pattern**: Handle distributed transactions (if needed).
 
+### Phase 6: Production Polish (High-Impact Additions)
+
+Add critical production features that demonstrate production-ready mindset.
+
+- [ ] **Health Checks**: `/health`, `/readiness`, `/liveness` endpoints for K8s probes.
+- [ ] **HTTPS/TLS**: cert-manager + Let's Encrypt integration in K8s.
+- [ ] **Secrets Management**: K8s Secrets + Sealed Secrets (GitOps-friendly).
+- [ ] **Error Tracking**: Sentry integration (free tier) for runtime error monitoring.
+- [ ] **Resilience Patterns**:
+  - [ ] Circuit Breaker (go-resilience library).
+  - [ ] Retry Logic with exponential backoff.
+  - [ ] Timeout configuration for external calls.
+
+> [!NOTE]
+> **Why these 6 features?**
+>
+> - **High Impact**: Every production system has these
+> - **Low Effort**: ~15-25 hours total (2-3 weeks part-time)
+> - **Learning Value**: K8s probes, TLS, secrets, error tracking, resilience
+> - **CV/Portfolio**: Shows production mindset, not just "tutorial code"
+
 ## 3. Immediate Next Steps / Recommendations
 
 1.  **Add Integration Tests**: The project has only one domain test. This is the biggest risk. We need to test the Repository layer with a real DB (using `testcontainers-go` is the senior way).
