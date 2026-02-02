@@ -36,3 +36,17 @@ Ten dokument definiuje zatwierdzony stack technologiczny i narzędzia używane w
 - `golangci-lint`: Strict linter configuration.
 - `k6`: Load testing framework.
 - `Postman`/`Bruno`: API Testing.
+
+## Middleware & Security Patterns
+
+- **Recovery Middleware**: Panic handling to prevent application crashes.
+- **Logging Middleware**: Request/response tracking with ResponseWriter wrapper pattern.
+- **Rate Limiting**: Protection against path scanning attacks (future: Redis-backed).
+- **Audit Logging**: Compliance logging for GDPR, PCI DSS, HIPAA (structured logs with slog).
+
+## Observability Stack
+
+- **Logs**: `slog` (Structured Logging - Go 1.21+) with JSON output.
+- **Metrics**: Prometheus (future).
+- **Tracing**: OpenTelemetry (future, optional in later phase).
+- **Monitoring**: Grafana dashboards (future).

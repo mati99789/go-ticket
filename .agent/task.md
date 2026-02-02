@@ -37,7 +37,7 @@
   - [x] Test Infrastructure (Testcontainers, fixtures)
   - [x] EventRepository tests (CRUD, race conditions)
   - [x] BookingService tests (transactions, rollback)
-  - [ ] Handler tests (end-to-end API Mocking)
+  - [x] Handler tests (end-to-end API Mocking)
 - [ ] Load Testing (k6) - Verify Race Conditions under load. <!-- id: 12 -->
 
 ## Phase 4: Security & Advanced Logic
@@ -47,9 +47,12 @@
   - [ ] Password hashing (bcrypt). <!-- id: 32 -->
   - [ ] JWT Middleware (protected routes). <!-- id: 33 -->
   - [ ] RBAC implementation (admin/organizer/user roles). <!-- id: 34 -->
-- [ ] **Pagination & Query Parameters**: <!-- id: 37 -->
-  - [ ] Implement pagination (limit, offset) for ListEvents. <!-- id: 38 -->
-  - [ ] Add filtering (by date range, price range). <!-- id: 39 -->
+- [ ] **Security Middleware**: <!-- id: 35 -->
+  - [ ] Rate Limiting Middleware (anti-scanning protection). <!-- id: 36 -->
+  - [ ] Audit Logging Middleware (compliance). <!-- id: 37 -->
+- [ ] **Pagination & Query Parameters**: <!-- id: 38 -->
+  - [ ] Implement pagination (limit, offset) for ListEvents. <!-- id: 39 -->
+  - [ ] Add filtering (by date range, price range). <!-- id: 40 -->
 
 ## Phase 5: DevOps & Cloud
 

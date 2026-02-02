@@ -26,6 +26,7 @@ dist/
 build/
 main # Jeśli budujesz binary jako 'main'
 go-ticket # Nazwa twojej binarki
+app # Compiled binary from 'go build -o app'
 
 # Vendor (chyba że chcesz vendoring)
 vendor/

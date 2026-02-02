@@ -867,6 +867,386 @@ slog.Error("Database error", "error", err, "query", "SELECT ...")
 
 ---
 
+## Middleware Patterns
+
+### What is Middleware?
+
+**Definition:**
+
+- Function that wraps an HTTP handler
+- Executes code BEFORE and/or AFTER the handler
+- Can modify request/response or short-circuit execution
+
+**Signature:**
+
+```go
+func Middleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // BEFORE handler
+        next.ServeHTTP(w, r)
+        // AFTER handler
+    })
+}
+```
+
+**Real World:**
+
+- Used by: Every production web application
+- Ideal for: Cross-cutting concerns (logging, auth, metrics)
+
+---
+
+### Recovery Middleware (Panic Handling)
+
+**What is it?**
+
+- Catches panics in handlers
+- Prevents entire application from crashing
+- Returns 500 to client instead of connection reset
+
+**Why critical?**
+
+- ✅ **Availability** - One bug doesn't kill entire app
+- ✅ **Debugging** - Logs panic details for investigation
+- ✅ **User Experience** - Client gets proper error response
+
+**In our project:**
+
+```go
+func RecoveryMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        defer func() {
+            if rec := recover(); rec != nil {
+                // Log panic details
+                slog.Error("Recovered from panic",
+                    "panic", rec,
+                    "path", r.URL.Path,
+                    "method", r.Method,
+                )
+
+                // Return 500 to client
+                w.WriteHeader(http.StatusInternalServerError)
+            }
+        }()
+
+        next.ServeHTTP(w, r)
+    })
+}
+```
+
+**What happens:**
+
+```
+Without Recovery:
+  User Request → Handler Panic → App Crashes → All users affected ❌
+
+With Recovery:
+  User Request → Handler Panic → Recovery catches → 500 response → App continues ✅
+```
+
+---
+
+### Logging Middleware (Request/Response Tracking)
+
+**What is it?**
+
+- Logs every HTTP request
+- Captures method, path, status code, duration
+- Essential for debugging and monitoring
+
+**Why critical?**
+
+- ✅ **Debugging** - See what requests are failing
+- ✅ **Monitoring** - Track error rates, slow endpoints
+- ✅ **Auditing** - Who accessed what and when
+
+**Problem: Can't read status code from ResponseWriter**
+
+```go
+// ❌ This doesn't work!
+func LoggingMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        next.ServeHTTP(w, r)
+
+        // How to get status code? w.Status doesn't exist!
+        slog.Info("request", "status", ???)
+    })
+}
+```
+
+**Solution: ResponseWriter Wrapper Pattern**
+
+```go
+// Wrapper that captures status code
+type ResponseRecord struct {
+    http.ResponseWriter  // Embed original
+    Status  int          // Capture status
+    Written bool         // Track if header sent
+}
+
+func (r *ResponseRecord) WriteHeader(status int) {
+    if r.Written {
+        return  // Prevent multiple calls
+    }
+    r.Status = status
+    r.Written = true
+    r.ResponseWriter.WriteHeader(status)
+}
+
+func (r *ResponseRecord) Write(b []byte) (int, error) {
+    if !r.Written {
+        r.WriteHeader(http.StatusOK)  // Default 200
+    }
+    return r.ResponseWriter.Write(b)
+}
+```
+
+**Usage:**
+
+```go
+func LoggingMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        start := time.Now()
+
+        // Wrap ResponseWriter
+        record := &ResponseRecord{
+            ResponseWriter: w,
+            Status:         http.StatusOK,
+        }
+
+        // Pass wrapper to handler
+        next.ServeHTTP(record, r)
+
+        // Now we can read status!
+        slog.Info("request completed",
+            "method", r.Method,
+            "path", r.URL.Path,
+            "status", record.Status,
+            "duration", time.Since(start),
+        )
+    })
+}
+```
+
+**How it works:**
+
+```
+1. Handler calls w.WriteHeader(201)
+2. Go calls ResponseRecord.WriteHeader(201) (our wrapper!)
+3. We save: record.Status = 201
+4. We call original: ResponseWriter.WriteHeader(201)
+5. After handler completes, we can read record.Status
+```
+
+---
+
+### Middleware Chaining (Order Matters!)
+
+**In our project:**
+
+```go
+handler := middleware.LoggingMiddleware(
+    middleware.RecoveryMiddleware(
+        mux,
+    ),
+)
+```
+
+**Execution flow:**
+
+```
+Request
+  ↓
+LoggingMiddleware (start timer)
+  ↓
+RecoveryMiddleware (set defer)
+  ↓
+Handler (your code)
+  ↓
+RecoveryMiddleware (check panic)
+  ↓
+LoggingMiddleware (log status + duration)
+  ↓
+Response
+```
+
+**Why this order?**
+
+- **Logging outermost** - Logs everything (even panics, rate limits)
+- **Recovery innermost** - Catches panics from handlers
+
+---
+
+## Security & Compliance
+
+### Rate Limiting (Anti-Scanning Protection)
+
+**Problem: Path Scanning Attacks**
+
+Hackers try hundreds of URLs to find hidden endpoints:
+
+```bash
+# Attacker's script:
+for path in /admin /api/internal /.env /backup /config; do
+    curl https://yourapp.com$path
+done
+# Result: Hundreds of 404 errors in logs
+```
+
+**Solution: Rate Limit 404 Errors**
+
+```go
+type IPRateLimiter struct {
+    failures map[string]int        // IP → 404 count
+    blocked  map[string]time.Time  // IP → block expiry
+    mu       sync.RWMutex
+}
+
+func RateLimitMiddleware(next http.Handler) http.Handler {
+    limiter := NewIPRateLimiter()
+
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        ip := r.RemoteAddr
+
+        // Check if blocked
+        if limiter.IsBlocked(ip) {
+            w.WriteHeader(http.StatusTooManyRequests)  // 429
+            return
+        }
+
+        // Execute request
+        record := &ResponseRecord{ResponseWriter: w, Status: 200}
+        next.ServeHTTP(record, r)
+
+        // Track 404s
+        if record.Status == 404 {
+            limiter.IncrementFailures(ip)
+
+            if limiter.GetFailures(ip) > 10 {
+                limiter.Block(ip, 1*time.Hour)
+                slog.Warn("IP blocked", "ip", ip, "reason", "excessive 404s")
+            }
+        }
+    })
+}
+```
+
+**Effect:**
+
+```
+Normal user:
+  - Clicks link → 404 (typo) → No problem ✅
+
+Attacker:
+  - Request 1-10: 404 responses
+  - Request 11+: 429 Too Many Requests (blocked!) ✅
+```
+
+**Real World:**
+
+- Used by: Cloudflare, AWS WAF, Nginx rate limiting
+- Protects: Against DDoS, scanning, brute force attacks
+
+---
+
+### Audit Logging (Compliance)
+
+**Problem: Regulatory Requirements**
+
+Many industries require logging:
+
+- **GDPR** (Europe) - Who accessed personal data?
+- **PCI DSS** (Payments) - Who tried to access card data?
+- **HIPAA** (Healthcare) - Who viewed patient records?
+- **SOX** (Finance) - Audit trail for all transactions
+
+**Solution: Audit Middleware**
+
+```go
+type AuditLog struct {
+    Timestamp  time.Time
+    IP         string
+    UserID     string  // From JWT token
+    Method     string
+    Path       string
+    StatusCode int
+    Duration   time.Duration
+}
+
+func AuditMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        start := time.Now()
+        record := &ResponseRecord{ResponseWriter: w, Status: 200}
+
+        next.ServeHTTP(record, r)
+
+        // Log all requests
+        audit := AuditLog{
+            Timestamp:  time.Now(),
+            IP:         r.RemoteAddr,
+            UserID:     getUserID(r),  // From JWT
+            Method:     r.Method,
+            Path:       r.URL.Path,
+            StatusCode: record.Status,
+            Duration:   time.Since(start),
+        }
+
+        // Structured logging
+        slog.Info("audit",
+            "timestamp", audit.Timestamp,
+            "ip", audit.IP,
+            "user_id", audit.UserID,
+            "method", audit.Method,
+            "path", audit.Path,
+            "status", audit.StatusCode,
+            "duration", audit.Duration,
+        )
+
+        // Alert on unauthorized access
+        if record.Status == 401 || record.Status == 403 {
+            slog.Warn("unauthorized access attempt",
+                "ip", audit.IP,
+                "path", audit.Path,
+            )
+        }
+    })
+}
+```
+
+**Use Cases:**
+
+**1. Security Investigation:**
+
+```bash
+# Who tried to access admin panel?
+$ grep '"path":"/admin"' audit.log | grep '"status":401'
+# Found: 50 attempts from IP 192.168.1.100 → Potential attack!
+```
+
+**2. Compliance Audit:**
+
+```bash
+# Who deleted event abc-123?
+$ grep '"path":"/events/abc-123"' audit.log | grep '"method":"DELETE"'
+# Found: user_id="admin-456" at 2026-02-02T10:45:00Z
+```
+
+**3. Performance Analysis:**
+
+```bash
+# Which endpoints are slow?
+$ grep '"duration"' audit.log | jq 'select(.duration > 1000)'
+# Found: /events endpoint taking 1.2s
+```
+
+**Real World:**
+
+- Required by: Banks, hospitals, e-commerce platforms
+- Stored in: Dedicated audit database (long-term retention)
+- Monitored by: Security teams, compliance officers
+
+---
+
 ## Production Patterns
 
 ### Graceful Shutdown

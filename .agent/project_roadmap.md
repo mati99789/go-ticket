@@ -47,6 +47,11 @@ Expand the application capabilities to learn modern API standards.
   - [ ] OAuth2 integration (Google, GitHub).
   - [ ] RBAC middleware (admin/organizer/user roles).
   - [ ] Password security (bcrypt, cost 12+).
+- [ ] **Security & Observability**:
+  - [ ] Rate Limiting Middleware (protect against scanning attacks).
+  - [ ] Audit Logging Middleware (compliance: GDPR, PCI DSS).
+  - [ ] Metrics collection (request count, error rate, latency).
+  - [ ] Correlation IDs for request tracing.
 
 ### Phase 3: DevOps & Containerization
 
