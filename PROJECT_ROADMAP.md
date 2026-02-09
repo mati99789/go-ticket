@@ -10,7 +10,7 @@
 |-------|--------|----------|
 | Phase 1: Core Domain & Repository | ✅ COMPLETE | 100% |
 | Phase 2: API Layer & Handlers | ✅ COMPLETE | 100% |
-| Phase 3: Authentication & Authorization | 🔄 IN PROGRESS | 80% |
+| Phase 3: Authentication & Authorization | 🔄 IN PROGRESS | 90% |
 | Phase 4: Security & Infrastructure | 📋 PLANNED | 0% |
 | Phase 5: Testing & CI/CD | 📋 PLANNED | 0% |
 | Phase 6: Production Deployment | 📋 PLANNED | 0% |
@@ -60,16 +60,25 @@
   - [x] User enumeration protection
   - [x] Timing attack protection
   - [x] Password validation (min 8 characters)
-
-### In Progress 🔄
-- [ ] Routing integration (wire up auth endpoints)
-- [ ] main.go integration (create services, inject dependencies)
-- [ ] Manual testing (curl/Postman)
+- [x] Response helpers (DRY - exported functions)
+- [x] Error mapping for auth errors
+- [x] **Auth middleware (JWT verification)**
+- [x] **Protected endpoints (all event/booking endpoints)**
+- [x] **Security logging (IP, path, no token exposure)**
 
 ### Remaining
-- [ ] Auth middleware (JWT verification for protected endpoints)
-- [ ] Protected endpoints (require authentication)
-- [ ] Role-based access control (admin, organizer, user)
+- [ ] Role-based access control (RBAC)
+  - [ ] Extract role from JWT claims in middleware
+  - [ ] Store role in context (not just user_id)
+  - [ ] Create `RequireRole()` middleware
+  - [ ] Apply role restrictions:
+    - [ ] POST /events → organizer/admin only
+    - [ ] PUT /events/{id} → organizer/admin only
+    - [ ] DELETE /events/{id} → admin only
+- [ ] Helper functions
+  - [ ] `GetUserFromContext()` - extract user_id and role
+- [ ] Testing
+  - [ ] Test role-based access (user vs organizer vs admin)
 
 ---
 
@@ -145,10 +154,10 @@
 
 ## 🎯 Next Steps (Immediate)
 
-1. **Complete routing** - wire up auth endpoints in main.go
-2. **Manual testing** - test registration and login with curl
-3. **Auth middleware** - protect endpoints that require authentication
-4. **Move to Phase 4** - add Redis and implement rate limiting
+1. **Role-Based Authorization (RBAC)** - implement role checking middleware
+2. **Apply role restrictions** - organizer/admin for event creation, admin for deletion
+3. **Testing** - verify role-based access control works correctly
+4. **Move to Phase 5** - add unit and integration tests
 
 ---
 

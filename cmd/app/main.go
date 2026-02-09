@@ -15,6 +15,7 @@ import (
 	"github.com/mati/go-ticket/internal/api"
 	"github.com/mati/go-ticket/internal/api/middleware"
 	"github.com/mati/go-ticket/internal/auth"
+	"github.com/mati/go-ticket/internal/domain"
 	"github.com/mati/go-ticket/internal/postgres"
 	"github.com/mati/go-ticket/internal/services"
 )
@@ -81,18 +82,33 @@ func run(logger *slog.Logger) error {
 	authHandler := api.NewAuthHandler(userService)
 
 	mux := http.NewServeMux()
+	auth := func(handler http.HandlerFunc) http.HandlerFunc {
+		return middleware.AuthMiddleware(authService, handler)
+	}
+
+	requireOrganizer := func(handler http.HandlerFunc) http.HandlerFunc {
+		return middleware.RequireRole([]domain.UserRole{domain.UserRoleOrganizer}, handler)
+	}
+
+	requireAdmin := func(handler http.HandlerFunc) http.HandlerFunc {
+		return middleware.RequireRole([]domain.UserRole{domain.UserRoleAdmin}, handler)
+	}
+
+	requireAll := func(handler http.HandlerFunc) http.HandlerFunc {
+		return middleware.RequireRole([]domain.UserRole{domain.UserRoleUser, domain.UserRoleAdmin, domain.UserRoleOrganizer}, handler)
+	}
 
 	// === Public endpoints ===
 	mux.HandleFunc("POST /auth/register", authHandler.Register)
 	mux.HandleFunc("POST /auth/login", authHandler.Login)
 
 	// === Protected endpoints ===
-	mux.HandleFunc("POST /events", middleware.AuthMiddleware(authService, eventHandler.CreateEvent))
-	mux.HandleFunc("PUT /events/{id}", middleware.AuthMiddleware(authService, eventHandler.UpdateEvent))
-	mux.HandleFunc("DELETE /events/{id}", middleware.AuthMiddleware(authService, eventHandler.DeleteEvent))
-	mux.HandleFunc("GET /events/{id}", middleware.AuthMiddleware(authService, eventHandler.GetEvent))
-	mux.HandleFunc("GET /events", middleware.AuthMiddleware(authService, eventHandler.ListEvents))
-	mux.HandleFunc("POST /events/{event_id}/bookings", middleware.AuthMiddleware(authService, eventHandler.CreateBooking))
+	mux.HandleFunc("POST /events", auth(requireOrganizer(eventHandler.CreateEvent)))
+	mux.HandleFunc("PUT /events/{id}", auth(requireOrganizer(eventHandler.UpdateEvent)))
+	mux.HandleFunc("DELETE /events/{id}", auth(requireAdmin(eventHandler.DeleteEvent)))
+	mux.HandleFunc("GET /events/{id}", auth(requireAll(eventHandler.GetEvent)))
+	mux.HandleFunc("GET /events", auth(requireAll(eventHandler.ListEvents)))
+	mux.HandleFunc("POST /events/{event_id}/bookings", auth(requireAll(eventHandler.CreateBooking)))
 
 	srv := &http.Server{
 		Addr:         ":8080",
