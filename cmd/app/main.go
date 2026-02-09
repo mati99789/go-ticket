@@ -82,14 +82,17 @@ func run(logger *slog.Logger) error {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /events", eventHandler.CreateEvent)
-	mux.HandleFunc("PUT /events/{id}", eventHandler.UpdateEvent)
-	mux.HandleFunc("DELETE /events/{id}", eventHandler.DeleteEvent)
-	mux.HandleFunc("GET /events/{id}", eventHandler.GetEvent)
-	mux.HandleFunc("GET /events", eventHandler.ListEvents)
-	mux.HandleFunc("POST /events/{event_id}/bookings", eventHandler.CreateBooking)
+	// === Public endpoints ===
 	mux.HandleFunc("POST /auth/register", authHandler.Register)
 	mux.HandleFunc("POST /auth/login", authHandler.Login)
+
+	// === Protected endpoints ===
+	mux.HandleFunc("POST /events", middleware.AuthMiddleware(authService, eventHandler.CreateEvent))
+	mux.HandleFunc("PUT /events/{id}", middleware.AuthMiddleware(authService, eventHandler.UpdateEvent))
+	mux.HandleFunc("DELETE /events/{id}", middleware.AuthMiddleware(authService, eventHandler.DeleteEvent))
+	mux.HandleFunc("GET /events/{id}", middleware.AuthMiddleware(authService, eventHandler.GetEvent))
+	mux.HandleFunc("GET /events", middleware.AuthMiddleware(authService, eventHandler.ListEvents))
+	mux.HandleFunc("POST /events/{event_id}/bookings", middleware.AuthMiddleware(authService, eventHandler.CreateBooking))
 
 	srv := &http.Server{
 		Addr:         ":8080",

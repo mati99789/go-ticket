@@ -26,7 +26,7 @@ func (h *HTTPHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateEventRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		responseError(w, http.StatusBadRequest, "invalid request body")
+		ResponseError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
@@ -35,7 +35,7 @@ func (h *HTTPHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		code, message := MapDomainError(err)
-		responseError(w, code, message)
+		ResponseError(w, code, message)
 		return
 	}
 
@@ -43,23 +43,23 @@ func (h *HTTPHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("Failed to create event", "error", err)
 		code, message := MapDomainError(err)
-		responseError(w, code, message)
+		ResponseError(w, code, message)
 		return
 	}
 
-	responseCreated(w, map[string]string{"id": id.String()})
+	ResponseCreated(w, map[string]string{"id": id.String()})
 }
 
 func (h *HTTPHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
-		responseError(w, http.StatusBadRequest, "invalid id")
+		ResponseError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
 	parsedId, err := uuid.Parse(id)
 	if err != nil {
-		responseError(w, http.StatusBadRequest, "invalid id")
+		ResponseError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
@@ -67,7 +67,7 @@ func (h *HTTPHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		code, message := MapDomainError(err)
-		responseError(w, code, message)
+		ResponseError(w, code, message)
 		return
 	}
 
@@ -75,21 +75,21 @@ func (h *HTTPHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("Failed to get event", "error", err)
 		code, message := MapDomainError(err)
-		responseError(w, code, message)
+		ResponseError(w, code, message)
 		return
 	}
 
 	err = event.UpdateName(req.Name)
 	if err != nil {
 		code, message := MapDomainError(err)
-		responseError(w, code, message)
+		ResponseError(w, code, message)
 		return
 	}
 
 	err = event.Reschedule(req.StartAt, req.EndAt)
 	if err != nil {
 		code, message := MapDomainError(err)
-		responseError(w, code, message)
+		ResponseError(w, code, message)
 		return
 	}
 
@@ -97,7 +97,7 @@ func (h *HTTPHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("Failed to update event", "error", err)
 		code, message := MapDomainError(err)
-		responseError(w, code, message)
+		ResponseError(w, code, message)
 		return
 	}
 
@@ -107,13 +107,13 @@ func (h *HTTPHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 func (h *HTTPHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
-		responseError(w, http.StatusBadRequest, "invalid id")
+		ResponseError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
 	parsedId, err := uuid.Parse(id)
 	if err != nil {
-		responseError(w, http.StatusBadRequest, "invalid id")
+		ResponseError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
@@ -121,7 +121,7 @@ func (h *HTTPHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("Failed to delete event", "error", err)
 		code, message := MapDomainError(err)
-		responseError(w, code, message)
+		ResponseError(w, code, message)
 		return
 	}
 
@@ -131,13 +131,13 @@ func (h *HTTPHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 func (h *HTTPHandler) GetEvent(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
-		responseError(w, http.StatusBadRequest, "invalid id")
+		ResponseError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
 	parsedId, err := uuid.Parse(id)
 	if err != nil {
-		responseError(w, http.StatusBadRequest, "invalid id")
+		ResponseError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
@@ -145,7 +145,7 @@ func (h *HTTPHandler) GetEvent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("Failed to get event", "error", err)
 		code, message := MapDomainError(err)
-		responseError(w, code, message)
+		ResponseError(w, code, message)
 		return
 	}
 
@@ -156,7 +156,7 @@ func (h *HTTPHandler) GetEvent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if err != nil {
 		code, message := MapDomainError(err)
-		responseError(w, code, message)
+		ResponseError(w, code, message)
 		return
 	}
 
@@ -168,7 +168,7 @@ func (h *HTTPHandler) ListEvents(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("Failed to list events", "error", err)
 		code, message := MapDomainError(err)
-		responseError(w, code, message)
+		ResponseError(w, code, message)
 		return
 	}
 
@@ -179,7 +179,7 @@ func (h *HTTPHandler) ListEvents(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if err != nil {
 		code, message := MapDomainError(err)
-		responseError(w, code, message)
+		ResponseError(w, code, message)
 		return
 	}
 
@@ -190,7 +190,7 @@ func (h *HTTPHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	eventID, err := uuid.Parse(eventIDStr)
 	if err != nil {
 		code, message := MapDomainError(err)
-		responseError(w, code, message)
+		ResponseError(w, code, message)
 		return
 	}
 
@@ -198,7 +198,7 @@ func (h *HTTPHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		code, message := MapDomainError(err)
-		responseError(w, code, message)
+		ResponseError(w, code, message)
 		return
 	}
 
@@ -207,16 +207,16 @@ func (h *HTTPHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	booking, err := domain.NewBooking(id, eventID, req.UserEmail, domain.BookingStatusPending)
 	if err != nil {
 		code, message := MapDomainError(err)
-		responseError(w, code, message)
+		ResponseError(w, code, message)
 		return
 	}
 
 	err = h.bookingService.CreateBooking(r.Context(), booking)
 	if err != nil {
 		code, message := MapDomainError(err)
-		responseError(w, code, message)
+		ResponseError(w, code, message)
 		return
 	}
 
-	responseCreated(w, dto.ToBookingResponse(booking))
+	ResponseCreated(w, dto.ToBookingResponse(booking))
 }
