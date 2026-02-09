@@ -14,6 +14,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/mati/go-ticket/internal/api"
 	"github.com/mati/go-ticket/internal/api/middleware"
+	"github.com/mati/go-ticket/internal/auth"
 	"github.com/mati/go-ticket/internal/postgres"
 	"github.com/mati/go-ticket/internal/services"
 )
@@ -44,6 +45,11 @@ func run(logger *slog.Logger) error {
 		return errors.New("JWT_SECRET_KEY is not set")
 	}
 
+	_, err := auth.NewJWTService(secretKey)
+	if err != nil {
+		return fmt.Errorf("failed to create JWT service: %w", err)
+	}
+
 	// Create database connection pool
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -61,12 +67,18 @@ func run(logger *slog.Logger) error {
 	}
 	logger.Info("Database migrations completed")
 
-	// Create repositories and services
 	queries := postgres.New(pool)
+	// === Repositories ===
 	eventRepository := postgres.NewEventRepository(queries)
 	bookingRepository := postgres.NewBookingRepository(queries)
+	userRepository := postgres.NewUserRepository(queries)
+	// === Services ===
+	authService, _ := auth.NewJWTService(secretKey)
 	bookingService := services.NewBookingService(eventRepository, bookingRepository, pool)
+	userService := services.NewUserService(userRepository, authService)
+	// === Handlers ===
 	eventHandler := api.NewHTTPHandler(eventRepository, bookingRepository, bookingService)
+	authHandler := api.NewAuthHandler(userService)
 
 	mux := http.NewServeMux()
 
@@ -76,6 +88,8 @@ func run(logger *slog.Logger) error {
 	mux.HandleFunc("GET /events/{id}", eventHandler.GetEvent)
 	mux.HandleFunc("GET /events", eventHandler.ListEvents)
 	mux.HandleFunc("POST /events/{event_id}/bookings", eventHandler.CreateBooking)
+	mux.HandleFunc("POST /auth/register", authHandler.Register)
+	mux.HandleFunc("POST /auth/login", authHandler.Login)
 
 	srv := &http.Server{
 		Addr:         ":8080",

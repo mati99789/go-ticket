@@ -38,4 +38,7 @@ var (
 	ErrUserIDNil              = errors.New("id is nil")
 	ErrUserEmailAlreadyExists = errors.New("email already exists")
 	ErrUserEmailInvalid       = errors.New("invalid email")
+	ErrUserNotFound           = errors.New("user not found")
+	ErrInvalidCredentials     = errors.New("invalid credentials")
+	ErrUserPasswordTooShort   = errors.New("password is too short")
 )

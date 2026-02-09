@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"os"
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -16,9 +16,19 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-var SECRET_KEY = os.Getenv("JWT_SECRET_KEY")
+type JWTService struct {
+	secretKey []byte
+}
 
-func GenerateToken(user *domain.User) (string, error) {
+func NewJWTService(secretKey string) (*JWTService, error) {
+	if secretKey == "" {
+		return nil, errors.New("JWT_SECRET_KEY is not set")
+	}
+
+	return &JWTService{secretKey: []byte(secretKey)}, nil
+}
+
+func (s *JWTService) GenerateToken(user *domain.User) (string, error) {
 
 	claims := &Claims{
 		UserID: user.ID(),
@@ -31,16 +41,16 @@ func GenerateToken(user *domain.User) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(SECRET_KEY))
+	return token.SignedString(s.secretKey)
 }
 
-func VerifyToken(tokenString string) (*Claims, error) {
+func (s *JWTService) VerifyToken(tokenString string) (*Claims, error) {
 
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrSignatureInvalid
 		}
-		return []byte(SECRET_KEY), nil
+		return s.secretKey, nil
 	})
 	if err != nil {
 		return nil, err

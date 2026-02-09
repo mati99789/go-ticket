@@ -8,6 +8,10 @@ import (
 	"github.com/mati/go-ticket/internal/postgres"
 )
 
+type CreateBookingService interface {
+	CreateBooking(ctx context.Context, booking *domain.Booking) error
+}
+
 type BookingService struct {
 	eventRepo   *postgres.EventRepository
 	bookingRepo *postgres.BookingRepository

@@ -207,24 +207,29 @@ To pass Code Review, every PR must meet the strict standards defined in `.agent/
 
 ## 🗺️ Roadmap & Progress
 
-- [x] **Phase 0: Setup** (Go, Linter, Project Structure)
+> **See [PROJECT_ROADMAP.md](PROJECT_ROADMAP.md) for detailed development plan**
+
 - [x] **Phase 1: Domain Core** (Entities, Validation, Unit Tests)
 - [x] **Phase 2: Persistence** (Postgres, pgxpool, sqlc, Migrations)
 - [x] **Phase 3: HTTP API** (REST Handlers, JSON, Graceful Shutdown)
 - [x] **Phase 3.5: Booking System** (Transactions, Atomic Reservations)
 - [x] **Phase 4: Polish** (DTO Layer, Error Mapping, Integration Tests)
-- [ ] **Phase 5: DevOps** (Docker, CI/CD, Observability)
-- [ ] **Phase 6: Cloud** (AWS Deployment, Terraform)
+- [x] **Phase 5: Authentication** (JWT, bcrypt, Security fixes) - 80% complete
+- [ ] **Phase 6: Infrastructure** (Redis, Rate Limiting, nginx)
+- [ ] **Phase 7: DevOps** (Docker, CI/CD, Observability)
+- [ ] **Phase 8: Cloud** (AWS Deployment, Terraform)
 
 ### Current Focus
 
-**Integration Testing** - Verifying system behavior with real database:
+**Authentication & Authorization** - Securing the application:
 
-- ✅ Testcontainers setup
-- ✅ Repository tests (CRUD, error handling)
-- ✅ Race condition tests (200 concurrent bookings)
-- 🔄 Service tests (transaction verification)
-- 🔄 Handler tests (end-to-end API)
+- ✅ JWT service (token generation/verification)
+- ✅ Password hashing (bcrypt)
+- ✅ User registration/login endpoints
+- ✅ Security fixes (user enumeration, timing attacks)
+- 🔄 Routing integration
+- 🔄 Auth middleware (JWT verification)
+- 📋 Rate limiting (requires Redis)
 
 ## 📈 Test Coverage
 

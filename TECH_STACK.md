@@ -1557,6 +1557,105 @@ handler := RecoveryMiddleware(LoggingMiddleware(mux))
 
 ---
 
+## Infrastructure & Security (Phase 4 - Planned)
+
+### Redis
+
+**What is it?**
+
+- In-memory data store
+- Key-value database
+- Extremely fast (microsecond latency)
+
+**Why Redis?**
+
+- ✅ **Speed** - All data in RAM (1M ops/sec)
+- ✅ **TTL** - Keys expire automatically (perfect for rate limiting)
+- ✅ **Atomic Operations** - INCR, DECR are thread-safe
+- ✅ **Distributed** - Works across multiple servers
+
+**Use Cases in GoTicket:**
+
+1. **Rate Limiting**
+   ```
+   Key: "rate_limit:login:192.168.1.100"
+   Value: 5 (attempts)
+   TTL: 900 seconds (15 minutes)
+   ```
+
+2. **Session Storage** (future)
+3. **Caching** (event details, user profiles)
+
+**When to add:** Phase 4 (after auth is complete)
+
+---
+
+### nginx
+
+**What is it?**
+
+- Web server and reverse proxy
+- Load balancer
+- SSL/TLS terminator
+
+**Why nginx?**
+
+- ✅ **Performance** - Handles 10,000+ concurrent connections
+- ✅ **SSL/TLS** - Terminates HTTPS (Let's Encrypt integration)
+- ✅ **Load Balancing** - Distributes traffic across multiple Go instances
+- ✅ **Static Files** - Serves images, CSS, JS faster than Go
+- ✅ **Security** - Rate limiting, DDoS protection
+
+**Use Cases in GoTicket:**
+
+1. **Reverse Proxy**
+   ```
+   Client → nginx (HTTPS) → Go App (HTTP)
+   ```
+
+2. **SSL Termination**
+   ```
+   nginx handles certificates
+   Go app doesn't need to know about SSL
+   ```
+
+3. **Load Balancing**
+   ```
+   nginx → Go Instance 1
+         → Go Instance 2
+         → Go Instance 3
+   ```
+
+**When to add:** Phase 4 (with Docker deployment)
+
+---
+
+### Rate Limiting Strategy
+
+**Problem:** Brute-force attacks on `/auth/login`
+
+**Solution:** Hybrid rate limiting (IP + Email)
+
+**Limits:**
+- IP-based: 10 attempts / 15 minutes
+- Email-based: 5 attempts / 15 minutes
+
+**Implementation:**
+```
+Middleware → Check Redis
+          → If limit exceeded → 429 Too Many Requests
+          → Else → INCR counter → Continue
+```
+
+**Why Redis?**
+- Atomic INCR (thread-safe)
+- Automatic TTL (no cleanup needed)
+- Distributed (works with multiple servers)
+
+**When to add:** Phase 4 (requires Redis)
+
+---
+
 ## Summary
 
 **This project uses:**
@@ -1565,6 +1664,7 @@ handler := RecoveryMiddleware(LoggingMiddleware(mux))
 - ✅ **Industry-standard patterns** (Clean Architecture, DDD, Repository)
 - ✅ **Best practices** (Graceful shutdown, structured logging, error wrapping)
 - ✅ **Modern Go** (1.22 routing, slog, embed, generics)
+- 📋 **Planned:** Redis (rate limiting), nginx (reverse proxy)
 
 **This is not tutorial code** - this is production-ready architecture used by:
 
@@ -1579,6 +1679,7 @@ handler := RecoveryMiddleware(LoggingMiddleware(mux))
 - Database best practices (transactions, migrations, pooling)
 - Testing strategies (unit, integration, race conditions)
 - Production patterns (graceful shutdown, logging, error handling)
+- Security (JWT, bcrypt, user enumeration protection, timing attacks)
 
 ---
 

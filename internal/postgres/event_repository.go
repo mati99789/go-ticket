@@ -74,7 +74,7 @@ func (r *EventRepository) GetEvent(ctx context.Context, id uuid.UUID) (*domain.E
 		return nil, domain.ErrEventNotFound
 	}
 
-	return domain.UnmarshalEvent(
+	return domain.NewEventFromPersistence(
 		uuid.UUID(row.ID.Bytes),
 		row.Name,
 		row.Price,
@@ -99,7 +99,7 @@ func (r *EventRepository) ListEvents(ctx context.Context) ([]*domain.Event, erro
 
 	var events []*domain.Event
 	for _, row := range rows {
-		event := domain.UnmarshalEvent(
+		event := domain.NewEventFromPersistence(
 			uuid.UUID(row.ID.Bytes),
 			row.Name,
 			row.Price,

@@ -99,8 +99,8 @@ func (e *Event) AvailableSpots() int {
 	return e.availableSpots
 }
 
-// UnmarshalEvent creates an Event from the given parameters.
-func UnmarshalEvent(id uuid.UUID,
+// NewEventFromPersistence creates an Event from the given parameters.
+func NewEventFromPersistence(id uuid.UUID,
 	name string,
 	price int64,
 	startAt, endAt, createdAt, updatedAt time.Time, capacity int, availableSpots int) *Event {

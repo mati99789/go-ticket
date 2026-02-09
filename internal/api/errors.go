@@ -48,6 +48,24 @@ func MapDomainError(err error) (statusCode int, message string) {
 	case errors.Is(err, domain.ErrBookingStatusInvalid):
 		return http.StatusBadRequest, "Invalid booking status"
 
+	case errors.Is(err, domain.ErrUserNotFound):
+		return http.StatusNotFound, "User not found"
+
+	case errors.Is(err, domain.ErrInvalidCredentials):
+		return http.StatusUnauthorized, "Invalid credentials"
+
+	case errors.Is(err, domain.ErrUserPasswordTooShort):
+		return http.StatusBadRequest, "Password is too short"
+
+	case errors.Is(err, domain.ErrUserEmailEmpty):
+		return http.StatusBadRequest, "Email is required"
+
+	case errors.Is(err, domain.ErrUserEmailAlreadyExists):
+		return http.StatusConflict, "User already exists"
+
+	case errors.Is(err, domain.ErrInvalidCredentials):
+		return http.StatusUnauthorized, "Invalid credentials"
+
 	// Default: Internal Server Error (500)
 	// DO NOT expose internal error details to clients for security reasons
 	default:

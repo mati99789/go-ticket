@@ -1,11 +1,18 @@
 package domain
 
 import (
+	"context"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+type UserRepository interface {
+	CreateUser(ctx context.Context, user *User) error
+	GetUserByEmail(ctx context.Context, email string) (*User, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (*User, error)
+}
 
 type UserRole string
 
@@ -24,7 +31,7 @@ type User struct {
 	updatedAt    time.Time
 }
 
-func NewUser(id uuid.UUID, email string, password string, role UserRole) (*User, error) {
+func NewUser(id uuid.UUID, email string, passwordHash string, role UserRole) (*User, error) {
 	if id == uuid.Nil {
 		return nil, ErrUserIDNil
 	}
@@ -32,7 +39,7 @@ func NewUser(id uuid.UUID, email string, password string, role UserRole) (*User,
 	if email == "" {
 		return nil, ErrUserEmailEmpty
 	}
-	if password == "" {
+	if passwordHash == "" {
 		return nil, ErrUserPasswordEmpty
 	}
 	if role != UserRoleUser && role != UserRoleAdmin && role != UserRoleOrganizer {
@@ -46,7 +53,7 @@ func NewUser(id uuid.UUID, email string, password string, role UserRole) (*User,
 	return &User{
 		id:           id,
 		email:        email,
-		passwordHash: password,
+		passwordHash: passwordHash,
 		role:         role,
 		createdAt:    time.Now(),
 		updatedAt:    time.Now(),
@@ -107,4 +114,22 @@ func (u *User) CreatedAt() time.Time {
 
 func (u *User) UpdatedAt() time.Time {
 	return u.updatedAt
+}
+
+func NewUserFromPersistence(id uuid.UUID, email string, passwordHash string, role UserRole, createdAt time.Time, updatedAt time.Time) (*User, error) {
+	return &User{
+		id:           id,
+		email:        email,
+		passwordHash: passwordHash,
+		role:         role,
+		createdAt:    createdAt,
+		updatedAt:    updatedAt,
+	}, nil
+}
+
+func ValidatePassword(password string) error {
+	if len(password) < 8 {
+		return ErrUserPasswordTooShort
+	}
+	return nil
 }
