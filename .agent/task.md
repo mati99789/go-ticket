@@ -42,18 +42,18 @@
 
 ## Phase 4: Security & Advanced Logic
 
-- [/] **Authentication & Authorization**: <!-- id: 31 -->
-  - [/] User Registration & Login (JWT). <!-- id: 30 -->
+- [x] **Authentication & Authorization**: <!-- id: 31 -->
+  - [x] User Registration & Login (JWT). <!-- id: 30 -->
     - [x] User Domain Entity (`internal/domain/user.go`) - validation, roles (user/admin/organizer)
     - [x] Database Migration (`000003_add_user_table.up.sql`) - users table with ENUM roles
     - [x] Password Hashing (`internal/auth/password.go`) - bcrypt implementation
     - [x] JWT Token Generation (`internal/auth/jwt.go`) - GenerateToken, VerifyToken
     - [x] SQLC Queries (`internal/postgres/queries/users.sql`) - CreateUser, GetUserByEmail, etc.
-    - [ ] User Repository (`internal/postgres/user_repository.go`) - **IN PROGRESS**
-    - [ ] Auth Handler (`internal/api/auth_handler.go`) - /register, /login endpoints
-    - [ ] Wire Auth endpoints in main.go
-  - [ ] JWT Middleware (protected routes). <!-- id: 33 -->
-  - [ ] RBAC implementation (admin/organizer/user roles). <!-- id: 34 -->
+    - [x] User Repository (`internal/postgres/user_repository.go`)
+    - [x] Auth Handler (`internal/api/auth_handler.go`) - /register, /login endpoints
+    - [x] Wire Auth endpoints in main.go
+  - [x] JWT Middleware (`internal/api/middleware/auth.go`) - protected routes. <!-- id: 33 -->
+  - [x] RBAC implementation (`RequireRole()` middleware + `requireOrganizer`/`requireAdmin`/`requireAll` wrappers in main.go). <!-- id: 34 -->
 - [ ] **Security Middleware**: <!-- id: 35 -->
   - [ ] Rate Limiting Middleware (anti-scanning protection). <!-- id: 36 -->
   - [ ] Audit Logging Middleware (compliance). <!-- id: 37 -->

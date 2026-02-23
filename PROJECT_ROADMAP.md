@@ -10,8 +10,8 @@
 |-------|--------|----------|
 | Phase 1: Core Domain & Repository | ✅ COMPLETE | 100% |
 | Phase 2: API Layer & Handlers | ✅ COMPLETE | 100% |
-| Phase 3: Authentication & Authorization | 🔄 IN PROGRESS | 90% |
-| Phase 4: Security & Infrastructure | 📋 PLANNED | 0% |
+| Phase 3: Authentication & Authorization | ✅ COMPLETE | 100% |
+| Phase 4: Security & Infrastructure | 🔄 NEXT | 0% |
 | Phase 5: Testing & CI/CD | 📋 PLANNED | 0% |
 | Phase 6: Production Deployment | 📋 PLANNED | 0% |
 
@@ -49,7 +49,7 @@
 
 ---
 
-## Phase 3: Authentication & Authorization 🔄
+## Phase 3: Authentication & Authorization ✅
 
 ### Completed ✅
 - [x] JWT service (token generation/verification)
@@ -65,20 +65,12 @@
 - [x] **Auth middleware (JWT verification)**
 - [x] **Protected endpoints (all event/booking endpoints)**
 - [x] **Security logging (IP, path, no token exposure)**
-
-### Remaining
-- [ ] Role-based access control (RBAC)
-  - [ ] Extract role from JWT claims in middleware
-  - [ ] Store role in context (not just user_id)
-  - [ ] Create `RequireRole()` middleware
-  - [ ] Apply role restrictions:
-    - [ ] POST /events → organizer/admin only
-    - [ ] PUT /events/{id} → organizer/admin only
-    - [ ] DELETE /events/{id} → admin only
-- [ ] Helper functions
-  - [ ] `GetUserFromContext()` - extract user_id and role
-- [ ] Testing
-  - [ ] Test role-based access (user vs organizer vs admin)
+- [x] **RBAC — `RequireRole()` middleware**
+- [x] **Role restrictions applied:**
+  - [x] `POST /events` → organizer only
+  - [x] `PUT /events/{id}` → organizer only
+  - [x] `DELETE /events/{id}` → admin only
+  - [x] `GET /events`, `GET /events/{id}`, `POST bookings` → all authenticated users
 
 ---
 
@@ -154,10 +146,10 @@
 
 ## 🎯 Next Steps (Immediate)
 
-1. **Role-Based Authorization (RBAC)** - implement role checking middleware
-2. **Apply role restrictions** - organizer/admin for event creation, admin for deletion
-3. **Testing** - verify role-based access control works correctly
-4. **Move to Phase 5** - add unit and integration tests
+1. **Rate Limiting** - Redis-based, IP+email hybrid (Phase 4)
+2. **CORS & Security Headers** - CSP, HSTS, request size limits
+3. **Load Testing (k6)** - verify race conditions under load
+4. **Move to Phase 5** - GitHub Actions CI/CD pipeline
 
 ---
 

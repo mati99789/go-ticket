@@ -1,11 +1,11 @@
 services:
-  postgres:
+  postgresDB:
     image: postgres:16-alpine
     container_name: go_ticket_db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: go_ticket
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
@@ -15,6 +15,16 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgresDB:
+        condition: service_healthy
+    env_file:
+      - .env
 
 volumes:
   postgres_data:

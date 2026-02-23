@@ -4,54 +4,43 @@ This document outlines the evaluation of the current `go-ticket` project and the
 
 ## 1. Project Audit: Current State vs. Goal
 
-| Category         | Component        | Current State              | Target "Senior" State                            | Status           |
-| :--------------- | :--------------- | :------------------------- | :----------------------------------------------- | :--------------- |
-| **Architecture** | Pattern          | Modular Monolith (Layered) | Domain-Driven Design (DDD) with clear boundaries | 🟡 In Progress   |
-|                  | Separation       | Basic (API, Service, Repo) | Hexagonal / Clean Architecture (Strict)          | 🟢 Good Start    |
-| **Backend (Go)** | API              | REST (Standard Lib)        | REST + **GraphQL** + gRPC                        | 🔴 Missing       |
-|                  | Concurrency      | Basic Mutexes              | Advanced Patterns (Workers, Pipelines)           | 🟡 Basic         |
-|                  | Persistence      | Postgres (pgx)             | Postgres + **Redis** (Caching)                   | 🟡 Postgres only |
-| **Security**     | Authentication   | None                       | **JWT** + **OAuth2** (Google/GitHub)             | 🔴 Missing       |
-|                  | Authorization    | None                       | **RBAC** (Role-Based Access Control)             | 🔴 Missing       |
-| **DevOps**       | Containerization | `docker-compose` (Dev)     | Optimized Multi-stage **Dockerfiles**            | 🔴 Missing       |
-|                  | Orchestration    | None                       | **Kubernetes** (Helm/Kustomize)                  | 🔴 Missing       |
-|                  | IaC              | None                       | **Terraform** / OpenTofu                         | 🔴 Missing       |
-|                  | CI/CD            | None                       | **GitHub Actions** (Lint, Test, Build, Push)     | 🔴 Missing       |
-| **Messaging**    | Async            | None                       | **Kafka / RabbitMQ** (Event Driven)              | 🔴 Missing       |
-| **Quality**      | Testing          | Unit Tests (Domain only)   | **Integration**, **E2E**, Property-based Tests   | 🔴 Critical Gap  |
-|                  | Observability    | Logging (slog)             | Distributed Tracing (OTEL), Metrics (Prometheus) | 🟡 Logging only  |
+| Category         | Component        | Current State                        | Target "Senior" State                            | Status            |
+| :--------------- | :--------------- | :----------------------------------- | :----------------------------------------------- | :---------------- |
+| **Architecture** | Pattern          | Modular Monolith (Clean Architecture)| Domain-Driven Design (DDD) with clear boundaries | 🟢 Solid          |
+|                  | Separation       | Domain / Service / Repo / API        | Hexagonal / Clean Architecture (Strict)          | 🟢 Done           |
+| **Backend (Go)** | API              | REST (Standard Lib)                  | REST + **GraphQL** + gRPC                        | 🟡 REST done      |
+|                  | Concurrency      | Atomic booking, Testcontainers       | Advanced Patterns (Workers, Pipelines)           | 🟢 Good           |
+|                  | Persistence      | Postgres (pgx + sqlc)                | Postgres + **Redis** (Caching + Rate Limiting)   | 🟡 Postgres done  |
+| **Security**     | Authentication   | JWT (access token)                   | **JWT** + **OAuth2** (Google/GitHub)             | 🟢 JWT done       |
+|                  | Authorization    | RBAC (user/organizer/admin)          | Full **RBAC** + fine-grained permissions         | 🟢 Done           |
+| **DevOps**       | Containerization | `docker-compose` (DB only)           | Optimized Multi-stage **Dockerfiles**            | 🔴 Next step      |
+|                  | Orchestration    | None                                 | **Kubernetes** (Helm/Kustomize)                  | 🔴 Planned        |
+|                  | IaC              | None                                 | **Terraform** / OpenTofu                         | 🔴 Planned        |
+|                  | CI/CD            | None                                 | **GitHub Actions** (Lint, Test, Build, Push)     | 🔴 Planned        |
+| **Messaging**    | Async            | None                                 | **Kafka / RabbitMQ** (Event Driven)              | 🔴 Phase 5        |
+| **Quality**      | Testing          | Integration Tests (Testcontainers)   | **E2E**, Load (k6), Property-based Tests         | 🟢 Int. tests done|
+|                  | Observability    | Structured logging (slog/JSON)       | Distributed Tracing (OTEL), Metrics (Prometheus) | 🟡 Logging only   |
 
 ## 2. The "Antigravity" Roadmap
 
 We will not build everything at once. We will follow an iterative "Evolutionary Architecture" approach.
 
-### Phase 1: Foundation Hardening (The "Professional" Monolith)
+### Phase 1: Foundation Hardening ✅ COMPLETE
 
-Before adding complexity, we must ensure quality.
+- [x] **Testing Strategy**: Integration Tests (Testcontainers) for Repositories + API Handlers.
+- [x] **Structured Logging**: JSON logging via `slog`.
+- [x] **Security & Auth**: JWT, RBAC (user/organizer/admin), bcrypt, user enumeration protection.
+- [x] **Error Handling**: Domain errors → HTTP status codes mapping.
+- [x] **Embedded Migrations**: Auto-run on startup.
 
-- [ ] **Testing Strategy**: Add Integration Tests for Repositories (Testcontainers) and API Handlers.
-- [ ] **Observability**: Add structured logging with correlation IDs and basic metrics.
-- [ ] **Configuration**: Robust config management (Viper or strict env parsing).
-- [ ] **Documentation**: Generate **Swagger/OpenAPI** docs (using `swaggo` or similar).
-- [ ] **Automation**: Create a `Makefile` for common tasks (build, test, lint, docker-up).
+### Phase 2: Security & DevOps Foundations 🔄 CURRENT
 
-### Phase 2: Advanced Backend Features
-
-Expand the application capabilities to learn modern API standards.
-
-- [ ] **GraphQL**: Implement a GraphQL layer using `gqlgen`.
-- [ ] **Caching**: Introduce Redis for caching event details.
-- [ ] **Security & Auth**:
-  - [ ] User Registration & Login endpoints.
-  - [ ] JWT-based authentication (access + refresh tokens).
-  - [ ] OAuth2 integration (Google, GitHub).
-  - [ ] RBAC middleware (admin/organizer/user roles).
-  - [ ] Password security (bcrypt, cost 12+).
-- [ ] **Security & Observability**:
-  - [ ] Rate Limiting Middleware (protect against scanning attacks).
-  - [ ] Audit Logging Middleware (compliance: GDPR, PCI DSS).
-  - [ ] Metrics collection (request count, error rate, latency).
-  - [ ] Correlation IDs for request tracing.
+- [ ] **Dockerfile**: Multi-stage build (builder → distroless/scratch). **← NEXT**
+- [ ] **Rate Limiting**: Redis-based middleware (IP + email, protect `/auth/login`).
+- [ ] **GitHub Actions CI/CD**: Lint + test + build + push on every PR.
+- [ ] **Load Testing (k6)**: Verify race-condition safety under load.
+- [ ] **Swagger/OpenAPI**: Auto-generated docs (`swaggo`).
+- [ ] **Correlation IDs**: Request tracing through middleware.
 
 ### Phase 3: DevOps & Containerization
 
@@ -99,9 +88,13 @@ Add critical production features that demonstrate production-ready mindset.
 
 ## 3. Immediate Next Steps / Recommendations
 
-1.  **Add Integration Tests**: The project has only one domain test. This is the biggest risk. We need to test the Repository layer with a real DB (using `testcontainers-go` is the senior way).
-2.  **Dockerize app**: Create a `Dockerfile` to run the app in isolation, not just the DB.
-3.  **GraphQL Definition**: Start defining the schema for the query side.
+1. **Dockerfile** (multi-stage, distroless) — fundament wszystkiego co dalej (K8s, CI/CD). **← TERAZ**
+2. **Rate Limiting** (Redis) — security-first + nauka Redis przy okazji.
+3. **GitHub Actions** — CI/CD pipeline (lint → test → build → push image).
+4. **Kubernetes** (local Kind/Minikube) — deploy skonteneryzowanej app.
+5. **Terraform** — provisioning infrastruktury.
+6. **Microservices split** — wyciągnięcie BookingService / NotificationService.
+7. **Kafka / RabbitMQ** — event-driven communication między serwisami.
 
 > [!IMPORTANT]
-> **Mentorship Rule**: We will NOT copy-paste code. We will design the interface first, then you implement it.
+> **Mentorship Rule**: We will NOT copy-paste code. We design the interface first, then you implement it.
