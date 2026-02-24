@@ -16,7 +16,7 @@ This document outlines the evaluation of the current `go-ticket` project and the
 | **DevOps**       | Containerization | Multi-stage Dockerfile (distroless)  | Optimized Multi-stage **Dockerfiles**            | 🟢 Done           |
 |                  | Orchestration    | None                                 | **Kubernetes** (Helm/Kustomize)                  | 🔴 Planned        |
 |                  | IaC              | None                                 | **Terraform** / OpenTofu                         | 🔴 Planned        |
-|                  | CI/CD            | None                                 | **GitHub Actions** (Lint, Test, Build, Push)     | 🟡 In Progress    |
+|                  | CI/CD            | GitHub Actions (CI + CD)             | **GitHub Actions** (Lint, Test, Build, Push)     | 🟢 Done           |
 | **Messaging**    | Async            | None                                 | **Kafka / RabbitMQ** (Event Driven)              | 🔴 Phase 5        |
 | **Quality**      | Testing          | Integration Tests (Testcontainers)   | **E2E**, Load (k6), Property-based Tests         | 🟢 Int. tests done|
 |                  | Observability    | Structured logging (slog/JSON)       | Distributed Tracing (OTEL), Metrics (Prometheus) | 🟡 Logging only   |
@@ -37,7 +37,9 @@ We will not build everything at once. We will follow an iterative "Evolutionary 
 
 - [x] **Dockerfile**: Multi-stage build (builder → distroless/static-debian12). 31MB image ✅
 - [x] **docker-compose**: app + postgres services, healthcheck, env_file. ✅
-- [/] **GitHub Actions CI/CD**: Lint + test + build + push on every PR. **← NEXT**
+- [x] **GitHub Actions CI**: lint (golangci-lint v2) + test (-race, coverage) + build on every push. ✅
+- [x] **GitHub Actions CD**: docker build + push to GHCR on main (workflow_run). ✅
+- [x] **Code Quality**: Fixed 36 golangci-lint issues (errcheck, gosec, lll, gocyclo, funlen). ✅
 - [ ] **Rate Limiting**: Redis-based middleware (IP + email, protect `/auth/login`).
 - [ ] **Load Testing (k6)**: Verify race-condition safety under load.
 - [ ] **Swagger/OpenAPI**: Auto-generated docs (`swaggo`).

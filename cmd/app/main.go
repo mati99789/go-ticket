@@ -21,7 +21,7 @@ import (
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger := setupLogger()
 	slog.SetDefault(logger)
 
 	if err := run(logger); err != nil {
@@ -30,7 +30,7 @@ func main() {
 	}
 }
 
-func run(logger *slog.Logger) error { //nolint:funlen // TODO: extract setupRoutes() and setupServer() helpers
+func run(logger *slog.Logger) error {
 	if err := godotenv.Load(); err != nil {
 		logger.Warn("Failed to load environment variables", "error", err)
 	}
@@ -45,7 +45,7 @@ func run(logger *slog.Logger) error { //nolint:funlen // TODO: extract setupRout
 		return errors.New("JWT_SECRET_KEY is not set")
 	}
 
-	_, err := auth.NewJWTService(secretKey)
+	authService, err := auth.NewJWTService(secretKey)
 	if err != nil {
 		return fmt.Errorf("failed to create JWT service: %w", err)
 	}
@@ -65,20 +65,38 @@ func run(logger *slog.Logger) error { //nolint:funlen // TODO: extract setupRout
 	}
 	logger.Info("Database migrations completed")
 
-	queries := postgres.New(pool)
 	// === Repositories ===
-	eventRepository := postgres.NewEventRepository(queries)
-	bookingRepository := postgres.NewBookingRepository(queries)
-	userRepository := postgres.NewUserRepository(queries)
+	eventRepository, bookingRepository, userRepository := setupRepositories(pool)
 	// === Services ===
-	authService, _ := auth.NewJWTService(secretKey)
-	bookingService := services.NewBookingService(eventRepository, bookingRepository, pool)
-	userService := services.NewUserService(userRepository, authService)
+	bookingService, userService := setupServices(eventRepository, bookingRepository, userRepository, authService, pool)
 	// === Handlers ===
 	eventHandler := api.NewHTTPHandler(eventRepository, bookingRepository, bookingService)
 	authHandler := api.NewAuthHandler(userService)
 
 	mux := http.NewServeMux()
+	setupRoutes(mux, authService, eventHandler, authHandler)
+
+	srv := setupServer(mux)
+
+	go func() {
+		if err := runServer(srv); err != nil {
+			logger.Error("Failed to start server", "error", err)
+		}
+	}()
+
+	logger.Info("Server started on :8080")
+
+	// Wait for a signal and then shutdown the server
+	gracefulShutdown(srv, logger)
+	return nil
+}
+
+func setupRoutes(
+	mux *http.ServeMux,
+	authService *auth.JWTService,
+	eventHandler *api.HTTPHandler,
+	authHandler *api.AuthHandler,
+) {
 	auth := func(handler http.HandlerFunc) http.HandlerFunc {
 		return middleware.AuthMiddleware(authService, handler)
 	}
@@ -109,37 +127,65 @@ func run(logger *slog.Logger) error { //nolint:funlen // TODO: extract setupRout
 	mux.HandleFunc("GET /events/{id}", auth(requireAll(eventHandler.GetEvent)))
 	mux.HandleFunc("GET /events", auth(requireAll(eventHandler.ListEvents)))
 	mux.HandleFunc("POST /events/{event_id}/bookings", auth(requireAll(eventHandler.CreateBooking)))
+}
 
-	srv := &http.Server{
+func setupServer(mux *http.ServeMux) *http.Server {
+	return &http.Server{
 		Addr:         ":8080",
 		Handler:      middleware.LoggingMiddleware(middleware.RecoveryMiddleware(mux)),
 		WriteTimeout: 10 * time.Second,
 		ReadTimeout:  5 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
+}
 
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Error("Failed to start server", "error", err)
-		}
-	}()
-
-	logger.Info("Server started on :8080")
-
-	// Wait for a signal and then shutdown the server
+func gracefulShutdown(srv *http.Server, logger *slog.Logger) {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 
 	<-stop
 	logger.Info("Shutting down server...")
 
-	ctx, cancel = context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		return fmt.Errorf("failed to shutdown server: %w", err)
+		logger.Error("Failed to shutdown server", "error", err)
 	}
 
 	logger.Info("Server shutdown successfully")
+}
+
+func runServer(srv *http.Server) error {
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		return fmt.Errorf("failed to start server: %w", err)
+	}
 	return nil
+}
+
+func setupLogger() *slog.Logger {
+	return slog.New(slog.NewJSONHandler(os.Stdout, nil))
+}
+
+func setupRepositories(pool *pgxpool.Pool) (
+	*postgres.EventRepository,
+	*postgres.BookingRepository,
+	*postgres.UserRepository,
+) {
+	queries := postgres.New(pool)
+	return postgres.NewEventRepository(queries),
+		postgres.NewBookingRepository(queries),
+		postgres.NewUserRepository(queries)
+}
+
+func setupServices(
+	eventRepository *postgres.EventRepository,
+	bookingRepository *postgres.BookingRepository,
+	userRepository *postgres.UserRepository,
+	authService *auth.JWTService,
+	pool *pgxpool.Pool,
+) (*services.BookingService, *services.UserService) {
+	bookingService := services.NewBookingService(eventRepository, bookingRepository, pool)
+	userService := services.NewUserService(userRepository, authService)
+	return bookingService, userService
 }

@@ -11,7 +11,7 @@
 | Phase 1: Core Domain & Repository | ✅ COMPLETE | 100% |
 | Phase 2: API Layer & Handlers | ✅ COMPLETE | 100% |
 | Phase 3: Authentication & Authorization | ✅ COMPLETE | 100% |
-| Phase 4: Security & Infrastructure | 🔄 IN PROGRESS | 30% |
+| Phase 4: Security & Infrastructure | 🔄 IN PROGRESS | 60% |
 | Phase 5: Testing & CI/CD | 📋 PLANNED | 0% |
 | Phase 6: Production Deployment | 📋 PLANNED | 0% |
 
@@ -80,12 +80,14 @@
 
 ### Containerization
 - [x] Multi-stage Dockerfile (golang:alpine builder → distroless/static-debian12 final)
-- [x] Docker Compose: app + postgres services, healthcheck, depends_on, env_file
-- [x] Image size: 31MB (vs ~600MB builder)
-- [x] Non-root user (nonroot:nonroot) in container
+- [x] Docker Compose: app + postgres, healthcheck, depends_on, env_file
+- [x] Image size: 31MB | Non-root user (nonroot:nonroot)
 
 ### CI/CD
-- [/] GitHub Actions workflow (lint → test → build → push) ← IN PROGRESS
+- [x] `ci.yml`: golangci-lint v2.10.1 → go test -race → go build (needs chain)
+- [x] `cd.yml`: workflow_run → GHCR push (sha + latest tags)
+- [x] Code quality: 36 golangci-lint issues fixed (errcheck, gosec, lll, whitespace)
+- [x] TODO backlog: `funlen` in main.go, `gocyclo` in MapDomainError
 
 ### Rate Limiting
 - [ ] Add Redis to docker-compose
