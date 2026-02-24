@@ -1,4 +1,5 @@
-version: 2
+version: "2"  # musi być string, nie liczba
+
 run:
   concurrency: 4
   timeout: 5m
@@ -25,28 +26,29 @@ linters:
     - unparam
     - whitespace
 
-linters-settings:
-  funlen:
-    lines: 120 # Increased for tests
-    statements: 60
-  gocyclo:
-    min-complexity: 15
-  lll:
-    line-length: 120
-  revive:
-    severity: warning
+  settings:  
+    funlen:
+      lines: 120
+      statements: 60
+    gocyclo:
+      min-complexity: 15
+    lll:
+      line-length: 120
+    revive:
+      severity: warning
 
 issues:
-  exclude-use-default: false
+  exclude-defaults: false  
   max-issues-per-linter: 0
   max-same-issues: 0
-  exclude-rules:
-    - linters:
-        - revive
-      text: "exported: exported"
-    - linters:
-        - revive
-      text: "package-comments"
-    - path: _test\.go
-      linters:
-        - funlen
+  exclusions:               
+    rules:
+      - linters:
+          - revive
+        text: "exported: exported"
+      - linters:
+          - revive
+        text: "package-comments"
+      - path: _test\.go
+        linters:
+          - funlen
