@@ -1,4 +1,4 @@
-version: "2"  # musi być string, nie liczba
+version: "2"
 
 run:
   concurrency: 4
@@ -26,7 +26,7 @@ linters:
     - unparam
     - whitespace
 
-  settings:  
+  settings:
     funlen:
       lines: 120
       statements: 60
@@ -37,12 +37,9 @@ linters:
     revive:
       severity: warning
 
-issues:
-  exclude-defaults: false  
-  max-issues-per-linter: 0
-  max-same-issues: 0
-  exclusions:               
-    rules:
+  exclusions:
+    default-exclusions: false   
+    rules:                     
       - linters:
           - revive
         text: "exported: exported"
@@ -52,3 +49,7 @@ issues:
       - path: _test\.go
         linters:
           - funlen
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
