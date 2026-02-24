@@ -29,7 +29,6 @@ func NewJWTService(secretKey string) (*JWTService, error) {
 }
 
 func (s *JWTService) GenerateToken(user *domain.User) (string, error) {
-
 	claims := &Claims{
 		UserID: user.ID(),
 		Email:  user.Email(),
@@ -45,7 +44,6 @@ func (s *JWTService) GenerateToken(user *domain.User) (string, error) {
 }
 
 func (s *JWTService) VerifyToken(tokenString string) (*Claims, error) {
-
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrSignatureInvalid

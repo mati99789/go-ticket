@@ -125,7 +125,12 @@ func TestBookingService_CreateBooking_TransactionRollback(t *testing.T) {
 
 	// Verify transaction rolled back - event spots should still be 0
 	retrievedEventAfterFailure := postgres.GetEventFromDB(ctx, t, pool, event.ID())
-	assert.Equal(t, 0, retrievedEventAfterFailure.AvailableSpots(), "Event spots should remain 0 after failed booking attempt")
+	assert.Equal(
+		t,
+		0,
+		retrievedEventAfterFailure.AvailableSpots(),
+		"Event spots should remain 0 after failed booking attempt",
+	)
 
 	// Verify second booking was not created
 	_, err = bookingRepository.GetBookingByID(ctx, booking2.ID())

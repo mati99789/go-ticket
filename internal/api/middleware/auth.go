@@ -23,7 +23,6 @@ type contextKey string
 const userContextKey contextKey = "user"
 
 func AuthMiddleware(jwtService *auth.JWTService, next http.HandlerFunc) http.HandlerFunc {
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
@@ -61,7 +60,6 @@ func AuthMiddleware(jwtService *auth.JWTService, next http.HandlerFunc) http.Han
 
 func RequireRole(allowedRoles []domain.UserRole, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		user, ok := r.Context().Value(userContextKey).(userData)
 		if !ok {
 			api.ResponseError(w, http.StatusUnauthorized, "Unauthorized")

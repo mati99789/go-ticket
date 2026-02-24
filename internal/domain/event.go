@@ -22,7 +22,14 @@ type Event struct {
 }
 
 // NewEvent creates a new validated Event.
-func NewEvent(id uuid.UUID, name string, price int64, startAt time.Time, endAt time.Time, capacity int) (*Event, error) {
+func NewEvent(
+	id uuid.UUID,
+	name string,
+	price int64,
+	startAt time.Time,
+	endAt time.Time,
+	capacity int,
+) (*Event, error) {
 	if id == uuid.Nil {
 		return nil, ErrEventIDNil
 	}

@@ -116,7 +116,14 @@ func (u *User) UpdatedAt() time.Time {
 	return u.updatedAt
 }
 
-func NewUserFromPersistence(id uuid.UUID, email string, passwordHash string, role UserRole, createdAt time.Time, updatedAt time.Time) (*User, error) {
+func NewUserFromPersistence(
+	id uuid.UUID,
+	email string,
+	passwordHash string,
+	role UserRole,
+	createdAt time.Time,
+	updatedAt time.Time,
+) (*User, error) {
 	return &User{
 		id:           id,
 		email:        email,

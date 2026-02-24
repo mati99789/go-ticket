@@ -54,7 +54,14 @@ func (ur *UserRepository) GetUserByEmail(ctx context.Context, email string) (*do
 		return nil, fmt.Errorf("failed to get user by email from database: %w", err)
 	}
 
-	return domain.NewUserFromPersistence(user.ID.Bytes, user.Email, user.PasswordHash, domain.UserRole(user.Role), user.CreatedAt.Time, user.UpdatedAt.Time)
+	return domain.NewUserFromPersistence(
+		user.ID.Bytes,
+		user.Email,
+		user.PasswordHash,
+		domain.UserRole(user.Role),
+		user.CreatedAt.Time,
+		user.UpdatedAt.Time,
+	)
 }
 
 func (ur *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
@@ -67,5 +74,12 @@ func (ur *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domai
 		return nil, fmt.Errorf("failed to get user by ID from database: %w", err)
 	}
 
-	return domain.NewUserFromPersistence(user.ID.Bytes, user.Email, user.PasswordHash, domain.UserRole(user.Role), user.CreatedAt.Time, user.UpdatedAt.Time)
+	return domain.NewUserFromPersistence(
+		user.ID.Bytes,
+		user.Email,
+		user.PasswordHash,
+		domain.UserRole(user.Role),
+		user.CreatedAt.Time,
+		user.UpdatedAt.Time,
+	)
 }

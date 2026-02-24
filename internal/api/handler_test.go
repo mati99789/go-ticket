@@ -15,6 +15,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const validEmail = "user@example.com"
+
 type MockCreateBookingService struct {
 	OnCreateBooking func(ctx context.Context, booking *domain.Booking) error
 }
@@ -28,7 +30,6 @@ func (m *MockCreateBookingService) CreateBooking(ctx context.Context, booking *d
 
 func TestCreateBooking_Success(t *testing.T) {
 	validEventID := uuid.New()
-	validEmail := "user@example.com"
 
 	mockCreateBookingService := &MockCreateBookingService{
 		OnCreateBooking: func(ctx context.Context, booking *domain.Booking) error {
@@ -70,7 +71,6 @@ func TestCreateBooking_Success(t *testing.T) {
 
 func TestCreate_Booking_EventFull(t *testing.T) {
 	validEventID := uuid.New()
-	validEmail := "user@example.com"
 
 	mockCreateBookingService := &MockCreateBookingService{
 		OnCreateBooking: func(ctx context.Context, booking *domain.Booking) error {
@@ -100,7 +100,6 @@ func TestCreate_Booking_EventFull(t *testing.T) {
 
 func TestCreateBooking_EventNotFound(t *testing.T) {
 	validEventID := uuid.New()
-	validEmail := "user@example.com"
 
 	mockCreateBookingService := &MockCreateBookingService{
 		OnCreateBooking: func(ctx context.Context, booking *domain.Booking) error {

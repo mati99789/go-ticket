@@ -104,7 +104,6 @@ func TestNewBooking(t *testing.T) {
 			if got.Status() != tt.args.status {
 				t.Errorf("NewBooking() Status = %v, want %v", got.Status(), tt.args.status)
 			}
-
 		})
 	}
 }

@@ -76,7 +76,14 @@ func TestNewEvent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := domain.NewEvent(tt.args.id, tt.args.name, tt.args.price, tt.args.startAt, tt.args.endAt, tt.args.capacity)
+			got, err := domain.NewEvent(
+				tt.args.id,
+				tt.args.name,
+				tt.args.price,
+				tt.args.startAt,
+				tt.args.endAt,
+				tt.args.capacity,
+			)
 
 			if err != tt.wantErr {
 				t.Errorf("NewEvent() error = %v, wantErr %v", err, tt.wantErr)

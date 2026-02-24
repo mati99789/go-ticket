@@ -100,7 +100,14 @@ func (b *Booking) UpdatedAt() time.Time {
 	return b.updatedAt
 }
 
-func UnmarshalBooking(id uuid.UUID, eventID uuid.UUID, userEmail string, status BookingStatus, createdAt, updatedAt time.Time) *Booking {
+func UnmarshalBooking(
+	id uuid.UUID,
+	eventID uuid.UUID,
+	userEmail string,
+	status BookingStatus,
+	createdAt time.Time,
+	updatedAt time.Time,
+) *Booking {
 	return &Booking{
 		id:        id,
 		eventID:   eventID,

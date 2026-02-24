@@ -31,7 +31,6 @@ func main() {
 }
 
 func run(logger *slog.Logger) error {
-	// Load environment variables from .env file
 	if err := godotenv.Load(); err != nil {
 		logger.Warn("Failed to load environment variables", "error", err)
 	}
@@ -51,7 +50,6 @@ func run(logger *slog.Logger) error {
 		return fmt.Errorf("failed to create JWT service: %w", err)
 	}
 
-	// Create database connection pool
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -61,7 +59,6 @@ func run(logger *slog.Logger) error {
 	}
 	defer pool.Close()
 
-	// Run database migrations
 	logger.Info("Running database migrations...")
 	if err := postgres.RunMigrations(dbUrl); err != nil {
 		return fmt.Errorf("failed to run migrations: %w", err)
@@ -95,7 +92,10 @@ func run(logger *slog.Logger) error {
 	}
 
 	requireAll := func(handler http.HandlerFunc) http.HandlerFunc {
-		return middleware.RequireRole([]domain.UserRole{domain.UserRoleUser, domain.UserRoleAdmin, domain.UserRoleOrganizer}, handler)
+		return middleware.RequireRole(
+			[]domain.UserRole{domain.UserRoleUser, domain.UserRoleAdmin, domain.UserRoleOrganizer},
+			handler,
+		)
 	}
 
 	// === Public endpoints ===
@@ -126,15 +126,13 @@ func run(logger *slog.Logger) error {
 
 	logger.Info("Server started on :8080")
 
-	// Wait for interrupt signal
+	// Wait for a signal and then shutdown the server
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 
-	// Wait for signal
 	<-stop
 	logger.Info("Shutting down server...")
 
-	// Shutdown server
 	ctx, cancel = context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 

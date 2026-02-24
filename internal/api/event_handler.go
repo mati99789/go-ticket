@@ -17,12 +17,19 @@ type HTTPHandler struct {
 	bookingService    services.CreateBookingService
 }
 
-func NewHTTPHandler(eventRepository domain.EventRepository, bookingRepository domain.BookingRepository, bookingService services.CreateBookingService) *HTTPHandler {
-	return &HTTPHandler{eventRepository: eventRepository, bookingRepository: bookingRepository, bookingService: bookingService}
+func NewHTTPHandler(
+	eventRepository domain.EventRepository,
+	bookingRepository domain.BookingRepository,
+	bookingService services.CreateBookingService,
+) *HTTPHandler {
+	return &HTTPHandler{
+		eventRepository:   eventRepository,
+		bookingRepository: bookingRepository,
+		bookingService:    bookingService,
+	}
 }
 
 func (h *HTTPHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
-
 	var req dto.CreateEventRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -159,11 +166,9 @@ func (h *HTTPHandler) GetEvent(w http.ResponseWriter, r *http.Request) {
 		ResponseError(w, code, message)
 		return
 	}
-
 }
 
 func (h *HTTPHandler) ListEvents(w http.ResponseWriter, r *http.Request) {
-
 	events, err := h.eventRepository.ListEvents(r.Context())
 	if err != nil {
 		slog.Error("Failed to list events", "error", err)
@@ -182,7 +187,6 @@ func (h *HTTPHandler) ListEvents(w http.ResponseWriter, r *http.Request) {
 		ResponseError(w, code, message)
 		return
 	}
-
 }
 
 func (h *HTTPHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
