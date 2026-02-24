@@ -40,7 +40,9 @@ We will not build everything at once. We will follow an iterative "Evolutionary 
 - [x] **GitHub Actions CI**: lint (golangci-lint v2) + test (-race, coverage) + build on every push. ✅
 - [x] **GitHub Actions CD**: docker build + push to GHCR on main (workflow_run). ✅
 - [x] **Code Quality**: Fixed 36 golangci-lint issues (errcheck, gosec, lll, gocyclo, funlen). ✅
-- [ ] **Rate Limiting**: Redis-based middleware (IP + email, protect `/auth/login`).
+- [x] **Rate Limiting**: Redis INCR+EXPIRE, two limiters (auth: 5/15min IP-based, API: 100/1min user-based), miniredis unit tests. ✅
+- [x] **main.go refactor**: extracted setupRoutes, setupServer, gracefulShutdown, setupRepositories helpers. ✅
+- [x] **MapDomainError refactor**: table-driven lookup with errorMapping struct. ✅
 - [ ] **Load Testing (k6)**: Verify race-condition safety under load.
 - [ ] **Swagger/OpenAPI**: Auto-generated docs (`swaggo`).
 - [ ] **Correlation IDs**: Request tracing through middleware.

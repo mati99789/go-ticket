@@ -10,7 +10,6 @@ import (
 )
 
 func TestRateLimiter(t *testing.T) {
-
 	mr := miniredis.RunT(t)
 	client := redis.NewClient(&redis.Options{
 		Addr: mr.Addr(),

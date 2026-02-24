@@ -54,8 +54,8 @@
     - [x] Wire Auth endpoints in main.go
   - [x] JWT Middleware (`internal/api/middleware/auth.go`) - protected routes. <!-- id: 33 -->
   - [x] RBAC implementation (`RequireRole()` middleware + `requireOrganizer`/`requireAdmin`/`requireAll` wrappers in main.go). <!-- id: 34 -->
-- [ ] **Security Middleware**: <!-- id: 35 -->
-  - [ ] Rate Limiting Middleware (anti-scanning protection). <!-- id: 36 -->
+- [x] **Security Middleware**: <!-- id: 35 -->
+  - [x] Rate Limiting Middleware — Redis INCR+EXPIRE, IPKey (auth) + UserKey (API), miniredis tests. <!-- id: 36 -->
   - [ ] Audit Logging Middleware (compliance). <!-- id: 37 -->
 - [ ] **Pagination & Query Parameters**: <!-- id: 38 -->
   - [ ] Implement pagination (limit, offset) for ListEvents. <!-- id: 39 -->
