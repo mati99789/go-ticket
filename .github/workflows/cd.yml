@@ -1,17 +1,23 @@
 name: CD Pipeline
 
 on: 
-  
   workflow_run:
     workflows: ["CI Pipeline"]
     types: [completed]
     branches: ['master']
 
+  workflow_dispatch:
+    inputs:
+      app_version:
+        description: 'Sha tag to deploy e.g. sha-1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+        required: false
+        default: 'latest'
+
 jobs:
   docker:
     name: Docker Build and Push
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     permissions:
       contents: read
       packages: write
@@ -42,7 +48,7 @@ jobs:
           tags: |
             type=sha,prefix=sha-,suffix=,enable={{is_default_branch}}
             type=raw,value=latest,enable={{is_default_branch}}
-      
+
       # -----------
       # Configure Docker Buildx
       # Extend Docker Buildx with QEMU for multi-platform builds

@@ -17,6 +17,7 @@ import (
 	"github.com/mati/go-ticket/internal/auth"
 	"github.com/mati/go-ticket/internal/domain"
 	"github.com/mati/go-ticket/internal/postgres"
+	"github.com/mati/go-ticket/internal/ratelimit"
 	"github.com/mati/go-ticket/internal/services"
 )
 
@@ -65,6 +66,18 @@ func run(logger *slog.Logger) error {
 	}
 	logger.Info("Database migrations completed")
 
+	// Redis
+	redisClient := ratelimit.NewClient()
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			logger.Error("failed to close redis client", "error", err)
+		}
+	}()
+	authLimiter := ratelimit.NewRateLimiter(redisClient, 5, 15*time.Minute)
+	apiLimiter := ratelimit.NewRateLimiter(redisClient, 100, 1*time.Minute)
+	rateLimitAuth := middleware.RateLimiterMiddleware(authLimiter, middleware.IPKey)
+	rateLimitAPI := middleware.RateLimiterMiddleware(apiLimiter, middleware.UserKey)
+
 	// === Repositories ===
 	eventRepository, bookingRepository, userRepository := setupRepositories(pool)
 	// === Services ===
@@ -74,7 +87,7 @@ func run(logger *slog.Logger) error {
 	authHandler := api.NewAuthHandler(userService)
 
 	mux := http.NewServeMux()
-	setupRoutes(mux, authService, eventHandler, authHandler)
+	setupRoutes(mux, authService, eventHandler, authHandler, rateLimitAuth, rateLimitAPI)
 
 	srv := setupServer(mux)
 
@@ -96,6 +109,8 @@ func setupRoutes(
 	authService *auth.JWTService,
 	eventHandler *api.HTTPHandler,
 	authHandler *api.AuthHandler,
+	rateLimitAuth func(http.HandlerFunc) http.HandlerFunc,
+	rateLimitAPI func(http.HandlerFunc) http.HandlerFunc,
 ) {
 	auth := func(handler http.HandlerFunc) http.HandlerFunc {
 		return middleware.AuthMiddleware(authService, handler)
@@ -117,16 +132,16 @@ func setupRoutes(
 	}
 
 	// === Public endpoints ===
-	mux.HandleFunc("POST /auth/register", authHandler.Register)
-	mux.HandleFunc("POST /auth/login", authHandler.Login)
+	mux.HandleFunc("POST /auth/register", rateLimitAuth(authHandler.Register))
+	mux.HandleFunc("POST /auth/login", rateLimitAuth(authHandler.Login))
 
 	// === Protected endpoints ===
-	mux.HandleFunc("POST /events", auth(requireOrganizer(eventHandler.CreateEvent)))
-	mux.HandleFunc("PUT /events/{id}", auth(requireOrganizer(eventHandler.UpdateEvent)))
-	mux.HandleFunc("DELETE /events/{id}", auth(requireAdmin(eventHandler.DeleteEvent)))
-	mux.HandleFunc("GET /events/{id}", auth(requireAll(eventHandler.GetEvent)))
-	mux.HandleFunc("GET /events", auth(requireAll(eventHandler.ListEvents)))
-	mux.HandleFunc("POST /events/{event_id}/bookings", auth(requireAll(eventHandler.CreateBooking)))
+	mux.HandleFunc("POST /events", auth(requireOrganizer(rateLimitAPI(eventHandler.CreateEvent))))
+	mux.HandleFunc("PUT /events/{id}", auth(requireOrganizer(rateLimitAPI(eventHandler.UpdateEvent))))
+	mux.HandleFunc("DELETE /events/{id}", auth(requireAdmin(rateLimitAPI(eventHandler.DeleteEvent))))
+	mux.HandleFunc("GET /events/{id}", auth(requireAll(rateLimitAPI(eventHandler.GetEvent))))
+	mux.HandleFunc("GET /events", auth(requireAll(rateLimitAPI(eventHandler.ListEvents))))
+	mux.HandleFunc("POST /events/{event_id}/bookings", auth(requireAll(rateLimitAPI(eventHandler.CreateBooking))))
 }
 
 func setupServer(mux *http.ServeMux) *http.Server {
