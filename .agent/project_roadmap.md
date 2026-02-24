@@ -13,10 +13,10 @@ This document outlines the evaluation of the current `go-ticket` project and the
 |                  | Persistence      | Postgres (pgx + sqlc)                | Postgres + **Redis** (Caching + Rate Limiting)   | 🟡 Postgres done  |
 | **Security**     | Authentication   | JWT (access token)                   | **JWT** + **OAuth2** (Google/GitHub)             | 🟢 JWT done       |
 |                  | Authorization    | RBAC (user/organizer/admin)          | Full **RBAC** + fine-grained permissions         | 🟢 Done           |
-| **DevOps**       | Containerization | `docker-compose` (DB only)           | Optimized Multi-stage **Dockerfiles**            | 🔴 Next step      |
+| **DevOps**       | Containerization | Multi-stage Dockerfile (distroless)  | Optimized Multi-stage **Dockerfiles**            | 🟢 Done           |
 |                  | Orchestration    | None                                 | **Kubernetes** (Helm/Kustomize)                  | 🔴 Planned        |
 |                  | IaC              | None                                 | **Terraform** / OpenTofu                         | 🔴 Planned        |
-|                  | CI/CD            | None                                 | **GitHub Actions** (Lint, Test, Build, Push)     | 🔴 Planned        |
+|                  | CI/CD            | None                                 | **GitHub Actions** (Lint, Test, Build, Push)     | 🟡 In Progress    |
 | **Messaging**    | Async            | None                                 | **Kafka / RabbitMQ** (Event Driven)              | 🔴 Phase 5        |
 | **Quality**      | Testing          | Integration Tests (Testcontainers)   | **E2E**, Load (k6), Property-based Tests         | 🟢 Int. tests done|
 |                  | Observability    | Structured logging (slog/JSON)       | Distributed Tracing (OTEL), Metrics (Prometheus) | 🟡 Logging only   |
@@ -35,9 +35,10 @@ We will not build everything at once. We will follow an iterative "Evolutionary 
 
 ### Phase 2: Security & DevOps Foundations 🔄 CURRENT
 
-- [ ] **Dockerfile**: Multi-stage build (builder → distroless/scratch). **← NEXT**
+- [x] **Dockerfile**: Multi-stage build (builder → distroless/static-debian12). 31MB image ✅
+- [x] **docker-compose**: app + postgres services, healthcheck, env_file. ✅
+- [/] **GitHub Actions CI/CD**: Lint + test + build + push on every PR. **← NEXT**
 - [ ] **Rate Limiting**: Redis-based middleware (IP + email, protect `/auth/login`).
-- [ ] **GitHub Actions CI/CD**: Lint + test + build + push on every PR.
 - [ ] **Load Testing (k6)**: Verify race-condition safety under load.
 - [ ] **Swagger/OpenAPI**: Auto-generated docs (`swaggo`).
 - [ ] **Correlation IDs**: Request tracing through middleware.

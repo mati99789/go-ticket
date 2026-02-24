@@ -63,8 +63,8 @@
 
 ## Phase 5: DevOps & Cloud
 
-- [ ] Containerization (Dockerfile, Docker Compose). <!-- id: 13 -->
-- [ ] GitHub Actions (CI pipelines). <!-- id: 14 -->
+- [x] Containerization (Dockerfile multi-stage distroless, Docker Compose app+db). <!-- id: 13 -->
+- [/] GitHub Actions (CI pipelines). <!-- id: 14 -->
 - [ ] Provisioning AWS (Terraform/OpenTofu). <!-- id: 15 -->
 - [ ] **Kubernetes (K8s)**: <!-- id: 48 -->
   - [ ] Deploy local cluster (Kind/Minikube). <!-- id: 49 -->

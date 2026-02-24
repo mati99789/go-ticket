@@ -11,7 +11,7 @@
 | Phase 1: Core Domain & Repository | ✅ COMPLETE | 100% |
 | Phase 2: API Layer & Handlers | ✅ COMPLETE | 100% |
 | Phase 3: Authentication & Authorization | ✅ COMPLETE | 100% |
-| Phase 4: Security & Infrastructure | 🔄 NEXT | 0% |
+| Phase 4: Security & Infrastructure | 🔄 IN PROGRESS | 30% |
 | Phase 5: Testing & CI/CD | 📋 PLANNED | 0% |
 | Phase 6: Production Deployment | 📋 PLANNED | 0% |
 
@@ -74,29 +74,28 @@
 
 ---
 
-## Phase 4: Security & Infrastructure 📋
+## Phase 4: Security & Infrastructure 🔄
 
 > **Prerequisites**: Complete Phase 3
+
+### Containerization
+- [x] Multi-stage Dockerfile (golang:alpine builder → distroless/static-debian12 final)
+- [x] Docker Compose: app + postgres services, healthcheck, depends_on, env_file
+- [x] Image size: 31MB (vs ~600MB builder)
+- [x] Non-root user (nonroot:nonroot) in container
+
+### CI/CD
+- [/] GitHub Actions workflow (lint → test → build → push) ← IN PROGRESS
 
 ### Rate Limiting
 - [ ] Add Redis to docker-compose
 - [ ] Implement rate limiting middleware
   - [ ] IP-based: 10 attempts / 15 minutes
   - [ ] Email-based: 5 attempts / 15 minutes
-  - [ ] Hybrid approach (both IP and email)
-- [ ] Test rate limiting (manual + automated)
-
-### Reverse Proxy (nginx)
-- [ ] Configure nginx as reverse proxy
-- [ ] SSL/TLS certificates (Let's Encrypt)
-- [ ] Request logging and access logs
-- [ ] Static file serving (if needed)
-- [ ] Load balancing configuration
 
 ### Additional Security
 - [ ] CORS configuration
 - [ ] Request size limits
-- [ ] Timeout configuration
 - [ ] Security headers (CSP, HSTS, etc.)
 
 ---
