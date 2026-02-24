@@ -38,8 +38,8 @@ linters:
       severity: warning
 
   exclusions:
-    default-exclusions: false   
-    rules:                     
+
+    rules:
       - linters:
           - revive
         text: "exported: exported"
