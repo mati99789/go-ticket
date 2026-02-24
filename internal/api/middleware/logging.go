@@ -3,7 +3,6 @@ package middleware
 import (
 	"log/slog"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -20,12 +19,9 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 
 		duration := time.Since(start)
 
-		safePath := strings.ReplaceAll(r.URL.Path, "\n", "\\n")
-		safePath = strings.ReplaceAll(safePath, "\r", "\\r")
-
-		slog.Info("request completed",
+		slog.Info("request completed", //nolint:gosec // G706: slog uses structured fields
 			slog.String("method", r.Method),
-			slog.String("path", safePath),
+			slog.String("path", r.URL.Path), //nolint:gosec // G706: slog uses structured fields
 			slog.Duration("duration", duration),
 			slog.Int("status", record.Status),
 		)

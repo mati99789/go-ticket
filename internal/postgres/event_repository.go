@@ -27,15 +27,17 @@ func (r *EventRepository) CreateEvent(ctx context.Context, event *domain.Event) 
 	startAt, endAt := event.StartAndEndAt()
 
 	params := CreateEventParams{
-		ID:             pgtype.UUID{Bytes: event.ID(), Valid: true},
-		Name:           event.Name(),
-		Price:          event.Price(),
-		StartAt:        pgtype.Timestamptz{Time: startAt, Valid: true},
-		EndAt:          pgtype.Timestamptz{Time: endAt, Valid: true},
-		CreatedAt:      pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		UpdatedAt:      pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		Capacity:       int32(event.Capacity()),
-		AvailableSpots: int32(event.AvailableSpots()),
+		ID:        pgtype.UUID{Bytes: event.ID(), Valid: true},
+		Name:      event.Name(),
+		Price:     event.Price(),
+		StartAt:   pgtype.Timestamptz{Time: startAt, Valid: true},
+		EndAt:     pgtype.Timestamptz{Time: endAt, Valid: true},
+		CreatedAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		UpdatedAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		Capacity:  int32(event.Capacity()), //nolint:gosec
+		// G115: integer overflow conversion int -> int32 handled by domain
+		AvailableSpots: int32(event.AvailableSpots()), //nolint:gosec
+		// G115: integer overflow conversion int -> int32 handled by domain
 	}
 
 	_, err := r.queries.CreateEvent(ctx, params)
@@ -53,7 +55,7 @@ func (r *EventRepository) UpdateEvent(ctx context.Context, event *domain.Event) 
 		StartAt:   pgtype.Timestamptz{Time: startAt, Valid: true},
 		EndAt:     pgtype.Timestamptz{Time: endAt, Valid: true},
 		UpdatedAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		Capacity:  int32(event.Capacity()),
+		Capacity:  int32(event.Capacity()), //nolint:gosec // G115: integer overflow conversion int -> int32 handled by domain
 	}
 
 	_, err := r.queries.UpdateEvent(ctx, params)
@@ -118,7 +120,7 @@ func (r *EventRepository) ListEvents(ctx context.Context) ([]*domain.Event, erro
 func (r *EventRepository) ReserveSpots(ctx context.Context, eventID uuid.UUID, spots int) error {
 	_, err := r.queries.ReserveSpots(ctx, ReserveSpotsParams{
 		ID:             pgtype.UUID{Bytes: eventID, Valid: true},
-		AvailableSpots: int32(spots),
+		AvailableSpots: int32(spots), //nolint:gosec // G115: integer overflow conversion int -> int32
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

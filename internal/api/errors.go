@@ -9,7 +9,8 @@ import (
 
 // MapDomainError maps domain errors to HTTP status codes and user-friendly messages.
 // Returns 500 Internal Server Error for unknown errors to avoid exposing sensitive information.
-func MapDomainError(err error) (statusCode int, message string) {
+func MapDomainError(err error) (statusCode int, message string) { //nolint:gocyclo
+	// TODO: extract error mappings to separate functions
 	switch {
 	// Event errors - Not Found (404)
 	case errors.Is(err, domain.ErrEventNotFound):

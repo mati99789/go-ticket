@@ -30,7 +30,7 @@ func main() {
 	}
 }
 
-func run(logger *slog.Logger) error {
+func run(logger *slog.Logger) error { //nolint:funlen // TODO: extract setupRoutes() and setupServer() helpers
 	if err := godotenv.Load(); err != nil {
 		logger.Warn("Failed to load environment variables", "error", err)
 	}

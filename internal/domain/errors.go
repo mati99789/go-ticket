@@ -14,6 +14,8 @@ var (
 	ErrEventStartAfterEnd = errors.New("startAt is after endAt")
 	// ErrEventIDNil is returned when the id is nil.
 	ErrEventIDNil = errors.New("id is nil")
+	// ErrEventCapacityTooLarge is returned when the capacity is too large.
+	ErrEventCapacityTooLarge = errors.New("capacity is too large")
 )
 
 // Booking errors

@@ -3,6 +3,7 @@ package domain
 
 import (
 	"context"
+	"math"
 	"time"
 
 	"github.com/google/uuid"
@@ -41,6 +42,9 @@ func NewEvent(
 	}
 	if startAt.After(endAt) {
 		return nil, ErrEventStartAfterEnd
+	}
+	if capacity > math.MaxInt32 {
+		return nil, ErrEventCapacityTooLarge
 	}
 	return &Event{
 		id:             id,
