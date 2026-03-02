@@ -38,7 +38,17 @@
   - [x] EventRepository tests (CRUD, race conditions)
   - [x] BookingService tests (transactions, rollback)
   - [x] Handler tests (end-to-end API Mocking)
-- [ ] Load Testing (k6) - Verify Race Conditions under load. <!-- id: 12 -->
+- [/] Load Testing (k6) - Verify Race Conditions under load. <!-- id: 12 -->
+  - [x] `tests/load/seed.sql` — organizer user + event (capacity=10000), ON CONFLICT DO NOTHING
+  - [x] `tests/load/booking_scenario.js` — options (stages ramp-up), thresholds (p95<200ms, errors<1%), default() skeleton
+  - [x] `tests/load/README.md` — pełna dokumentacja: jak uruchomić, seed, weryfikacja po teście, CI/CD plan
+  - [ ] Dokończyć `booking_scenario.js`:
+    - [ ] Dodać `setup()` — POST /auth/login → return { token, eventId }
+    - [ ] Zaktualizować `default(data)` — użyć `data.token` w Authorization header i `data.eventId` w URL
+    - [ ] Usunąć hardkodowany `event_id` z payload body (endpoint oczekuje tylko `userEmail`)
+  - [ ] Uruchomić seed: `docker-compose exec -T db psql ... < tests/load/seed.sql`
+  - [ ] Uruchomić test: `k6 run tests/load/booking_scenario.js`
+  - [ ] Zweryfikować wynik: `COUNT(bookings) + available_spots == 10000` (brak double-bookingu)
 
 ## Phase 4: Security & Advanced Logic
 

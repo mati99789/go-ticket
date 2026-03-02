@@ -4,22 +4,22 @@ This document outlines the evaluation of the current `go-ticket` project and the
 
 ## 1. Project Audit: Current State vs. Goal
 
-| Category         | Component        | Current State                        | Target "Senior" State                            | Status            |
-| :--------------- | :--------------- | :----------------------------------- | :----------------------------------------------- | :---------------- |
-| **Architecture** | Pattern          | Modular Monolith (Clean Architecture)| Domain-Driven Design (DDD) with clear boundaries | 🟢 Solid          |
-|                  | Separation       | Domain / Service / Repo / API        | Hexagonal / Clean Architecture (Strict)          | 🟢 Done           |
-| **Backend (Go)** | API              | REST (Standard Lib)                  | REST + **GraphQL** + gRPC                        | 🟡 REST done      |
-|                  | Concurrency      | Atomic booking, Testcontainers       | Advanced Patterns (Workers, Pipelines)           | 🟢 Good           |
-|                  | Persistence      | Postgres (pgx + sqlc)                | Postgres + **Redis** (Caching + Rate Limiting)   | 🟡 Postgres done  |
-| **Security**     | Authentication   | JWT (access token)                   | **JWT** + **OAuth2** (Google/GitHub)             | 🟢 JWT done       |
-|                  | Authorization    | RBAC (user/organizer/admin)          | Full **RBAC** + fine-grained permissions         | 🟢 Done           |
-| **DevOps**       | Containerization | Multi-stage Dockerfile (distroless)  | Optimized Multi-stage **Dockerfiles**            | 🟢 Done           |
-|                  | Orchestration    | None                                 | **Kubernetes** (Helm/Kustomize)                  | 🔴 Planned        |
-|                  | IaC              | None                                 | **Terraform** / OpenTofu                         | 🔴 Planned        |
-|                  | CI/CD            | GitHub Actions (CI + CD)             | **GitHub Actions** (Lint, Test, Build, Push)     | 🟢 Done           |
-| **Messaging**    | Async            | None                                 | **Kafka / RabbitMQ** (Event Driven)              | 🔴 Phase 5        |
-| **Quality**      | Testing          | Integration Tests (Testcontainers)   | **E2E**, Load (k6), Property-based Tests         | 🟢 Int. tests done|
-|                  | Observability    | Structured logging (slog/JSON)       | Distributed Tracing (OTEL), Metrics (Prometheus) | 🟡 Logging only   |
+| Category         | Component        | Current State                         | Target "Senior" State                            | Status             |
+| :--------------- | :--------------- | :------------------------------------ | :----------------------------------------------- | :----------------- |
+| **Architecture** | Pattern          | Modular Monolith (Clean Architecture) | Domain-Driven Design (DDD) with clear boundaries | 🟢 Solid           |
+|                  | Separation       | Domain / Service / Repo / API         | Hexagonal / Clean Architecture (Strict)          | 🟢 Done            |
+| **Backend (Go)** | API              | REST (Standard Lib)                   | REST + **GraphQL** + gRPC                        | 🟡 REST done       |
+|                  | Concurrency      | Atomic booking, Testcontainers        | Advanced Patterns (Workers, Pipelines)           | 🟢 Good            |
+|                  | Persistence      | Postgres (pgx + sqlc)                 | Postgres + **Redis** (Caching + Rate Limiting)   | 🟡 Postgres done   |
+| **Security**     | Authentication   | JWT (access token)                    | **JWT** + **OAuth2** (Google/GitHub)             | 🟢 JWT done        |
+|                  | Authorization    | RBAC (user/organizer/admin)           | Full **RBAC** + fine-grained permissions         | 🟢 Done            |
+| **DevOps**       | Containerization | Multi-stage Dockerfile (distroless)   | Optimized Multi-stage **Dockerfiles**            | 🟢 Done            |
+|                  | Orchestration    | None                                  | **Kubernetes** (Helm/Kustomize)                  | 🔴 Planned         |
+|                  | IaC              | None                                  | **Terraform** / OpenTofu                         | 🔴 Planned         |
+|                  | CI/CD            | GitHub Actions (CI + CD)              | **GitHub Actions** (Lint, Test, Build, Push)     | 🟢 Done            |
+| **Messaging**    | Async            | None                                  | **Kafka / RabbitMQ** (Event Driven)              | 🔴 Phase 5         |
+| **Quality**      | Testing          | Integration Tests (Testcontainers)    | **E2E**, Load (k6), Property-based Tests         | 🟢 Int. tests done |
+|                  | Observability    | Structured logging (slog/JSON)        | Distributed Tracing (OTEL), Metrics (Prometheus) | 🟡 Logging only    |
 
 ## 2. The "Antigravity" Roadmap
 
@@ -43,7 +43,12 @@ We will not build everything at once. We will follow an iterative "Evolutionary 
 - [x] **Rate Limiting**: Redis INCR+EXPIRE, two limiters (auth: 5/15min IP-based, API: 100/1min user-based), miniredis unit tests. ✅
 - [x] **main.go refactor**: extracted setupRoutes, setupServer, gracefulShutdown, setupRepositories helpers. ✅
 - [x] **MapDomainError refactor**: table-driven lookup with errorMapping struct. ✅
-- [ ] **Load Testing (k6)**: Verify race-condition safety under load.
+- [/] **Load Testing (k6)**: Verify race-condition safety under load.
+  - ✅ `tests/load/seed.sql` — organizer user + event z capacity=10000
+  - ✅ `tests/load/booking_scenario.js` — szkielet: options, stages, thresholds, default()
+  - ✅ `tests/load/README.md` — dokumentacja uruchomienia, seed, weryfikacja, CI/CD plan
+  - ⏳ Dokończyć `booking_scenario.js`: `setup()` (login→token) + `default(data)` z auth headerem
+  - ⏳ Uruchomić seed + test + zweryfikować brak double-bookingu
 - [ ] **Swagger/OpenAPI**: Auto-generated docs (`swaggo`).
 - [ ] **Correlation IDs**: Request tracing through middleware.
 
