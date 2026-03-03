@@ -12,6 +12,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
+	_ "github.com/mati/go-ticket/docs"
 	"github.com/mati/go-ticket/internal/api"
 	"github.com/mati/go-ticket/internal/api/middleware"
 	"github.com/mati/go-ticket/internal/auth"
