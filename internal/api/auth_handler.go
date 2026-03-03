@@ -22,8 +22,7 @@ func NewAuthHandler(userService services.UserServiceInterface) *AuthHandler {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param email body string true "Email"
-// @Param password body string true "Password"
+// @Param body body dto.RegisterRequest true "User data"
 // @Success 201 {object} map[string]string
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
@@ -58,8 +57,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param email body string true "Email"
-// @Param password body string true "Password"
+// @Param body body dto.LoginRequest true "User data"
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string

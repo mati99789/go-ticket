@@ -1,4 +1,45 @@
 basePath: /
+definitions:
+  dto.CreateBookingRequest:
+    type: object
+  dto.CreateEventRequest:
+    properties:
+      capacity:
+        type: integer
+      endAt:
+        type: string
+      name:
+        type: string
+      price:
+        type: integer
+      startAt:
+        type: string
+    type: object
+  dto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  dto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  dto.UpdateEventRequest:
+    properties:
+      endAt:
+        type: string
+      name:
+        type: string
+      price:
+        type: integer
+      startAt:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -12,18 +53,12 @@ paths:
       - application/json
       description: Login user with email and password
       parameters:
-      - description: Email
+      - description: User data
         in: body
-        name: email
+        name: body
         required: true
         schema:
-          type: string
-      - description: Password
-        in: body
-        name: password
-        required: true
-        schema:
-          type: string
+          $ref: '#/definitions/dto.LoginRequest'
       produces:
       - application/json
       responses:
@@ -54,18 +89,12 @@ paths:
       - application/json
       description: Register a new user with email and password
       parameters:
-      - description: Email
+      - description: User data
         in: body
-        name: email
+        name: body
         required: true
         schema:
-          type: string
-      - description: Password
-        in: body
-        name: password
-        required: true
-        schema:
-          type: string
+          $ref: '#/definitions/dto.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -124,36 +153,12 @@ paths:
       - application/json
       description: Create a new event
       parameters:
-      - description: Event name
+      - description: Event data
         in: body
-        name: name
+        name: body
         required: true
         schema:
-          type: string
-      - description: Event price
-        in: body
-        name: price
-        required: true
-        schema:
-          type: number
-      - description: Event start time
-        in: body
-        name: startAt
-        required: true
-        schema:
-          type: string
-      - description: Event end time
-        in: body
-        name: endAt
-        required: true
-        schema:
-          type: string
-      - description: Event capacity
-        in: body
-        name: capacity
-        required: true
-        schema:
-          type: integer
+          $ref: '#/definitions/dto.CreateEventRequest'
       produces:
       - application/json
       responses:
@@ -189,18 +194,12 @@ paths:
         name: event_id
         required: true
         type: string
-      - description: Email
+      - description: Booking data
         in: body
-        name: email
+        name: body
         required: true
         schema:
-          type: string
-      - description: Quantity
-        in: body
-        name: quantity
-        required: true
-        schema:
-          type: integer
+          $ref: '#/definitions/dto.CreateBookingRequest'
       produces:
       - application/json
       responses:
@@ -304,36 +303,12 @@ paths:
         name: id
         required: true
         type: string
-      - description: Event name
+      - description: Event data
         in: body
-        name: name
+        name: body
         required: true
         schema:
-          type: string
-      - description: Event price
-        in: body
-        name: price
-        required: true
-        schema:
-          type: number
-      - description: Event start time
-        in: body
-        name: startAt
-        required: true
-        schema:
-          type: string
-      - description: Event end time
-        in: body
-        name: endAt
-        required: true
-        schema:
-          type: string
-      - description: Event capacity
-        in: body
-        name: capacity
-        required: true
-        schema:
-          type: integer
+          $ref: '#/definitions/dto.UpdateEventRequest'
       produces:
       - application/json
       responses:

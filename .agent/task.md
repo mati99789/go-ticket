@@ -79,12 +79,18 @@
 - [ ] **Kubernetes (K8s)**: <!-- id: 48 -->
   - [ ] Deploy local cluster (Kind/Minikube). <!-- id: 49 -->
   - [ ] Helm Charts for GoTicket. <!-- id: 50 -->
-- [ ] Observability & Monitoring (Prometheus, Grafana, OpenTelemetry). <!-- id: 42 -->
+
+## Phase 6: Senior Upgrades (WIP)
+
+- [ ] Swagger/OpenAPI Documentation <!-- id: 70 -->
+  - [x] Instalacja i konfiguracja `swag` oraz `http-swagger`.
+  - [x] Odsłonięcie endpointu UI `/swagger/`.
+  - [ ] Poprawienie adnotacji, by korzystały ze struktur DTO (zamiast wielu luźnych parametrów body).
+- [ ] Observability (Prometheus, Grafana, Distributed Tracing - Jaeger/OpenTelemetry) <!-- id: 50 -->
 
 ## Phase 6: Senior Upgrades (The "Antigravity" Audit)
 
 - [ ] **RPC**: gRPC Implementation (Proto definitions). <!-- id: 9 -->
-- [ ] **Docs**: Swagger/OpenAPI documentation. <!-- id: 24 -->
 - [ ] **Cache**: Redis implementation (Caching & Distributed Locks). <!-- id: 11 -->
 - [ ] **Async**: Kafka/RabbitMQ for Domain Events. <!-- id: 27 -->
 - [ ] **Microservices**: Extracting Notification/Payment Service. <!-- id: 28 -->

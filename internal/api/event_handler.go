@@ -35,11 +35,7 @@ func NewHTTPHandler(
 // @Tags event
 // @Accept json
 // @Produce json
-// @Param name body string true "Event name"
-// @Param price body float64 true "Event price"
-// @Param startAt body string true "Event start time"
-// @Param endAt body string true "Event end time"
-// @Param capacity body int true "Event capacity"
+// @Param body body dto.CreateEventRequest true "Event data"
 // @Success 201 {object} map[string]string
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
@@ -78,11 +74,7 @@ func (h *HTTPHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Event ID"
-// @Param name body string true "Event name"
-// @Param price body float64 true "Event price"
-// @Param startAt body string true "Event start time"
-// @Param endAt body string true "Event end time"
-// @Param capacity body int true "Event capacity"
+// @Param body body dto.UpdateEventRequest true "Event data"
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
@@ -254,8 +246,7 @@ func (h *HTTPHandler) ListEvents(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param event_id path string true "Event ID"
-// @Param email body string true "Email"
-// @Param quantity body int true "Quantity"
+// @Param body body dto.CreateBookingRequest true "Booking data"
 // @Success 201 {object} map[string]string
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
