@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mati/go-ticket/internal/api/dto"
+	"github.com/mati/go-ticket/internal/api/middleware"
 	"github.com/mati/go-ticket/internal/domain"
 	"github.com/mati/go-ticket/internal/services"
 )
@@ -208,7 +209,13 @@ func (h *HTTPHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 
 	id := uuid.New()
 
-	booking, err := domain.NewBooking(id, eventID, req.UserEmail, domain.BookingStatusPending)
+	user, ok := middleware.GetUserDataFromContext(r.Context())
+	if !ok {
+		ResponseError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	booking, err := domain.NewBooking(id, eventID, user.Email, domain.BookingStatusPending)
 	if err != nil {
 		code, message := MapDomainError(err)
 		ResponseError(w, code, message)

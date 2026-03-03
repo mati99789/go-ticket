@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mati/go-ticket/internal/api/dto"
+	"github.com/mati/go-ticket/internal/api/middleware"
 	"github.com/mati/go-ticket/internal/domain"
 	"github.com/stretchr/testify/assert"
 )
@@ -51,9 +52,7 @@ func TestCreateBooking_Success(t *testing.T) {
 
 	handler := NewHTTPHandler(nil, nil, mockCreateBookingService)
 
-	reqBody := dto.CreateBookingRequest{
-		UserEmail: validEmail,
-	}
+	reqBody := dto.CreateBookingRequest{}
 
 	jsonBody, _ := json.Marshal(reqBody)
 
@@ -61,6 +60,8 @@ func TestCreateBooking_Success(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	req.SetPathValue("event_id", validEventID.String())
+
+	req = req.WithContext(middleware.WithTestUser(req.Context(), validEmail))
 
 	recorder := httptest.NewRecorder()
 
@@ -80,9 +81,7 @@ func TestCreate_Booking_EventFull(t *testing.T) {
 
 	handler := NewHTTPHandler(nil, nil, mockCreateBookingService)
 
-	reqBody := dto.CreateBookingRequest{
-		UserEmail: validEmail,
-	}
+	reqBody := dto.CreateBookingRequest{}
 
 	jsonBody, _ := json.Marshal(reqBody)
 
@@ -90,6 +89,8 @@ func TestCreate_Booking_EventFull(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	req.SetPathValue("event_id", validEventID.String())
+
+	req = req.WithContext(middleware.WithTestUser(req.Context(), validEmail))
 
 	recorder := httptest.NewRecorder()
 
@@ -109,9 +110,7 @@ func TestCreateBooking_EventNotFound(t *testing.T) {
 
 	handler := NewHTTPHandler(nil, nil, mockCreateBookingService)
 
-	reqBody := dto.CreateBookingRequest{
-		UserEmail: validEmail,
-	}
+	reqBody := dto.CreateBookingRequest{}
 
 	jsonBody, _ := json.Marshal(reqBody)
 
@@ -119,6 +118,8 @@ func TestCreateBooking_EventNotFound(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	req.SetPathValue("event_id", validEventID.String())
+
+	req = req.WithContext(middleware.WithTestUser(req.Context(), validEmail))
 
 	recorder := httptest.NewRecorder()
 

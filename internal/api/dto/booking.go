@@ -7,7 +7,6 @@ import (
 )
 
 type CreateBookingRequest struct {
-	UserEmail string `json:"userEmail"`
 }
 
 type BookingResponse struct {
