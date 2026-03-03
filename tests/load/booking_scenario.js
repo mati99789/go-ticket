@@ -15,19 +15,60 @@ export const options = {
     }
 }
 
-
-export default function () {
-    const payload = JSON.stringify({
-        event_id: '550e8400-e29b-41d4-a716-446655440000',
+export function setup() {
+    const uniqEmail = `${Math.random()}@loadtest.com`
+    const registerPayload = JSON.stringify({
+        email: uniqEmail,
+        password: 'password',
     })
 
-    const params = {
+    const registerParams = {
         headers: {
             'Content-Type': 'application/json',
         }
     }
 
-    const res = http.post('http://localhost:8080/events/550e8400-e29b-41d4-a716-446655440000/bookings', payload, params)
+    const res = http.post('http://localhost:8080/auth/register', registerPayload, registerParams)
+
+    check(res, {
+        'status is 201': (r) => r.status === 201
+    })
+
+    const loginPayload = JSON.stringify({
+        email: uniqEmail,
+        password: 'password',
+    })
+
+    const loginParams = {
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    }
+
+    const loginRes = http.post('http://localhost:8080/auth/login', loginPayload, loginParams)
+
+    check(loginRes, {
+        'status is 200': (r) => r.status === 200
+    })
+
+    return {
+        token: loginRes.json('token'),
+        email: uniqEmail,
+    }
+}
+
+export default function (data) {
+    const payload = JSON.stringify({
+        userEmail: data.email
+    })
+    const params = {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${data.token}`,
+        }
+    }
+
+    const res = http.post('http://localhost:8080/events/a0000000-0000-0000-0000-000000000001/bookings', payload, params)
 
     check(res, {
         'status is 201': (r) => r.status === 201
@@ -35,3 +76,4 @@ export default function () {
 
     sleep(1)
 }
+
