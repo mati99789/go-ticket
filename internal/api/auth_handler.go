@@ -17,6 +17,17 @@ func NewAuthHandler(userService services.UserServiceInterface) *AuthHandler {
 	return &AuthHandler{userService: userService}
 }
 
+// @Summary Register a new user
+// @Description Register a new user with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param email body string true "Email"
+// @Param password body string true "Password"
+// @Success 201 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /auth/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req dto.RegisterRequest
 
@@ -42,6 +53,17 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	ResponseCreated(w, map[string]string{"message": "User registered successfully"})
 }
 
+// @Summary Login user
+// @Description Login user with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param email body string true "Email"
+// @Param password body string true "Password"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /auth/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req dto.LoginRequest
 

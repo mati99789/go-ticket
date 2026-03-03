@@ -30,6 +30,20 @@ func NewHTTPHandler(
 	}
 }
 
+// @Summary Create a new event
+// @Description Create a new event
+// @Tags event
+// @Accept json
+// @Produce json
+// @Param name body string true "Event name"
+// @Param price body float64 true "Event price"
+// @Param startAt body string true "Event start time"
+// @Param endAt body string true "Event end time"
+// @Param capacity body int true "Event capacity"
+// @Success 201 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /events [post]
 func (h *HTTPHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateEventRequest
 
@@ -58,6 +72,21 @@ func (h *HTTPHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	ResponseCreated(w, map[string]string{"id": id.String()})
 }
 
+// @Summary Update an event
+// @Description Update an event
+// @Tags event
+// @Accept json
+// @Produce json
+// @Param id path string true "Event ID"
+// @Param name body string true "Event name"
+// @Param price body float64 true "Event price"
+// @Param startAt body string true "Event start time"
+// @Param endAt body string true "Event end time"
+// @Param capacity body int true "Event capacity"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /events/{id} [put]
 func (h *HTTPHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -112,6 +141,16 @@ func (h *HTTPHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// @Summary Delete an event
+// @Description Delete an event
+// @Tags event
+// @Accept json
+// @Produce json
+// @Param id path string true "Event ID"
+// @Success 204 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /events/{id} [delete]
 func (h *HTTPHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -136,6 +175,16 @@ func (h *HTTPHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// @Summary Get an event
+// @Description Get an event
+// @Tags event
+// @Accept json
+// @Produce json
+// @Param id path string true "Event ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /events/{id} [get]
 func (h *HTTPHandler) GetEvent(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -169,6 +218,15 @@ func (h *HTTPHandler) GetEvent(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// @Summary List all events
+// @Description List all events
+// @Tags event
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /events [get]
 func (h *HTTPHandler) ListEvents(w http.ResponseWriter, r *http.Request) {
 	events, err := h.eventRepository.ListEvents(r.Context())
 	if err != nil {
@@ -190,6 +248,18 @@ func (h *HTTPHandler) ListEvents(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// @Summary Create a booking
+// @Description Create a booking
+// @Tags booking
+// @Accept json
+// @Produce json
+// @Param event_id path string true "Event ID"
+// @Param email body string true "Email"
+// @Param quantity body int true "Quantity"
+// @Success 201 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /events/{event_id}/bookings [post]
 func (h *HTTPHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	eventIDStr := r.PathValue("event_id")
 	eventID, err := uuid.Parse(eventIDStr)
