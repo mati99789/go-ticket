@@ -19,8 +19,17 @@ import (
 	"github.com/mati/go-ticket/internal/postgres"
 	"github.com/mati/go-ticket/internal/ratelimit"
 	"github.com/mati/go-ticket/internal/services"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
+// @title Go Ticket API
+// @version 1.0
+// @description Simple API for booking tickets.
+// @host localhost:8080
+// @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	logger := setupLogger()
 	slog.SetDefault(logger)
@@ -130,6 +139,11 @@ func setupRoutes(
 			handler,
 		)
 	}
+
+	// Swagger
+	mux.HandleFunc("GET /swagger/", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
+	))
 
 	// === Public endpoints ===
 	mux.HandleFunc("POST /auth/register", rateLimitAuth(authHandler.Register))

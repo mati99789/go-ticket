@@ -63,10 +63,10 @@
 - [x] **Security Middleware**: <!-- id: 35 -->
   - [x] Rate Limiting Middleware — Redis INCR+EXPIRE, IPKey (auth) + UserKey (API), miniredis tests. <!-- id: 36 -->
   - [ ] Audit Logging Middleware (compliance). <!-- id: 37 -->
-- [ ] **Security Design Issue — Booking userEmail**: <!-- id: 68 -->
-  - [ ] `CreateBooking` przyjmuje `userEmail` z body requestu zamiast z JWT tokenu (`claims.Email`).
-  - [ ] Każdy zalogowany user może stworzyć booking "w imieniu" dowolnego innego emaila.
-  - [ ] Fix: wyciągnąć email z JWT claims w handlerze i zignorować `userEmail` z body (lub usunąć z DTO).
+- [x] **Security Design Issue — Booking userEmail**: <!-- id: 68 -->
+  - [x] `CreateBooking` przyjmuje `userEmail` z body requestu zamiast z JWT tokenu (`claims.Email`).
+  - [x] Każdy zalogowany user może stworzyć booking "w imieniu" dowolnego innego emaila.
+  - [x] Fix: wyciągnąć email z JWT claims w handlerze i zignorować `userEmail` z body (lub usunąć z DTO).
 - [ ] **Pagination & Query Parameters**: <!-- id: 38 -->
   - [ ] Implement pagination (limit, offset) for ListEvents. <!-- id: 39 -->
   - [ ] Add filtering (by date range, price range). <!-- id: 40 -->
