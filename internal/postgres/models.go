@@ -75,6 +75,16 @@ type Event struct {
 	AvailableSpots int32              `json:"available_spots"`
 }
 
+type OutboxEvent struct {
+	ID          pgtype.UUID      `json:"id"`
+	EventName   string           `json:"event_name"`
+	EventData   []byte           `json:"event_data"`
+	Status      pgtype.Text      `json:"status"`
+	Destination string           `json:"destination"`
+	CreatedAt   pgtype.Timestamp `json:"created_at"`
+	UpdatedAt   pgtype.Timestamp `json:"updated_at"`
+}
+
 type User struct {
 	ID           pgtype.UUID        `json:"id"`
 	Email        string             `json:"email"`

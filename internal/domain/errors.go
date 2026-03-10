@@ -44,3 +44,9 @@ var (
 	ErrInvalidCredentials     = errors.New("invalid credentials")
 	ErrUserPasswordTooShort   = errors.New("password is too short")
 )
+
+// Outbox errors
+var (
+	ErrOutboxEventNotFound = errors.New("outbox event not found")
+	ErrOutboxEventInvalid  = errors.New("invalid outbox event")
+)

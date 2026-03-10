@@ -82,17 +82,19 @@
 
 ## Phase 6: Senior Upgrades (WIP)
 
-- [ ] Swagger/OpenAPI Documentation <!-- id: 70 -->
+- [x] Swagger/OpenAPI Documentation <!-- id: 70 -->
   - [x] Instalacja i konfiguracja `swag` oraz `http-swagger`.
   - [x] Odsłonięcie endpointu UI `/swagger/`.
-  - [ ] Poprawienie adnotacji, by korzystały ze struktur DTO (zamiast wielu luźnych parametrów body).
+  - [x] Poprawienie adnotacji, by korzystały ze struktur DTO (zamiast wielu luźnych parametrów body).
 - [ ] Observability (Prometheus, Grafana, Distributed Tracing - Jaeger/OpenTelemetry) <!-- id: 50 -->
 
 ## Phase 6: Senior Upgrades (The "Antigravity" Audit)
 
 - [ ] **RPC**: gRPC Implementation (Proto definitions). <!-- id: 9 -->
 - [ ] **Cache**: Redis implementation (Caching & Distributed Locks). <!-- id: 11 -->
-- [ ] **Async**: Kafka/RabbitMQ for Domain Events. <!-- id: 27 -->
+- [/] **Async**: Kafka/RabbitMQ for Domain Events. <!-- id: 27 -->
+  - [x] Implement Transactional Outbox Pattern in PostgreSQL (Dual Write fix)
+  - [ ] Implement Outbox Relay/Worker to pull events and publish to Message Broker
 - [ ] **Microservices**: Extracting Notification/Payment Service. <!-- id: 28 -->
 
 ## Phase 7: Production Polish (High-Impact Additions)

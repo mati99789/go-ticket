@@ -21,7 +21,8 @@ func TestBookingService_CreateBooking_Success(t *testing.T) {
 	queries := postgres.New(pool)
 	eventRepository := postgres.NewEventRepository(queries)
 	bookingRepository := postgres.NewBookingRepository(queries)
-	bookingService := NewBookingService(eventRepository, bookingRepository, pool)
+	outboxRepository := postgres.NewOutBoxRepository(queries)
+	bookingService := NewBookingService(eventRepository, bookingRepository, outboxRepository, pool)
 
 	booking, err := domain.NewBooking(uuid.New(), event.ID(), "test@example.com", domain.BookingStatusPending)
 	assert.NoError(t, err)
@@ -51,7 +52,8 @@ func TestBookingService_CreateBooking_EventNotFound(t *testing.T) {
 	queries := postgres.New(pool)
 	eventRepository := postgres.NewEventRepository(queries)
 	bookingRepository := postgres.NewBookingRepository(queries)
-	bookingService := NewBookingService(eventRepository, bookingRepository, pool)
+	outboxRepository := postgres.NewOutBoxRepository(queries)
+	bookingService := NewBookingService(eventRepository, bookingRepository, outboxRepository, pool)
 
 	// Try to create booking for non-existent event
 	fakeEventID := uuid.New()
@@ -76,7 +78,8 @@ func TestBookingService_CreateBooking_EventFull(t *testing.T) {
 	queries := postgres.New(pool)
 	eventRepository := postgres.NewEventRepository(queries)
 	bookingRepository := postgres.NewBookingRepository(queries)
-	bookingService := NewBookingService(eventRepository, bookingRepository, pool)
+	outboxRepository := postgres.NewOutBoxRepository(queries)
+	bookingService := NewBookingService(eventRepository, bookingRepository, outboxRepository, pool)
 
 	// Try to create booking
 	booking, err := domain.NewBooking(uuid.New(), event.ID(), "test@example.com", domain.BookingStatusPending)
@@ -100,7 +103,8 @@ func TestBookingService_CreateBooking_TransactionRollback(t *testing.T) {
 	queries := postgres.New(pool)
 	eventRepository := postgres.NewEventRepository(queries)
 	bookingRepository := postgres.NewBookingRepository(queries)
-	bookingService := NewBookingService(eventRepository, bookingRepository, pool)
+	outboxRepository := postgres.NewOutBoxRepository(queries)
+	bookingService := NewBookingService(eventRepository, bookingRepository, outboxRepository, pool)
 
 	// Create first booking (should succeed)
 	booking1, err := domain.NewBooking(uuid.New(), event.ID(), "test1@example.com", domain.BookingStatusPending)

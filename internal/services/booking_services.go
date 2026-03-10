@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 
@@ -18,17 +19,20 @@ type CreateBookingService interface {
 type BookingService struct {
 	eventRepo   *postgres.EventRepository
 	bookingRepo *postgres.BookingRepository
+	outboxRepo  *postgres.OutBoxRepository
 	pool        *pgxpool.Pool
 }
 
 func NewBookingService(
 	eventRepo *postgres.EventRepository,
 	bookingRepo *postgres.BookingRepository,
+	outboxRepo *postgres.OutBoxRepository,
 	pool *pgxpool.Pool,
 ) *BookingService {
 	return &BookingService{
 		eventRepo:   eventRepo,
 		bookingRepo: bookingRepo,
+		outboxRepo:  outboxRepo,
 		pool:        pool,
 	}
 }
@@ -51,8 +55,28 @@ func (bs *BookingService) CreateBooking(ctx context.Context, booking *domain.Boo
 	if err := bs.bookingRepo.WithTx(tx).CreateBooking(ctx, booking); err != nil {
 		return err
 	}
+
+	eventData, err := json.Marshal(booking)
+	if err != nil {
+		return err
+	}
+	outboxEvent, err := domain.CreateOutboxEvent(
+		"CreateBooking",
+		eventData,
+		"booking_events_topic",
+	)
+	if err != nil {
+		return err
+	}
+	if err := bs.outboxRepo.WithTx(tx).Create(ctx, outboxEvent); err != nil {
+		return err
+	}
+
 	if err := tx.Commit(ctx); err != nil {
 		return err
 	}
+
+	slog.Info("Crated Booking and Outbox Event", "booking", booking, "outboxEvent", outboxEvent)
+
 	return nil
 }

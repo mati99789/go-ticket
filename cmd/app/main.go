@@ -215,7 +215,8 @@ func setupServices(
 	authService *auth.JWTService,
 	pool *pgxpool.Pool,
 ) (*services.BookingService, *services.UserService) {
-	bookingService := services.NewBookingService(eventRepository, bookingRepository, pool)
+	outboxRepository := postgres.NewOutBoxRepository(postgres.New(pool))
+	bookingService := services.NewBookingService(eventRepository, bookingRepository, outboxRepository, pool)
 	userService := services.NewUserService(userRepository, authService)
 	return bookingService, userService
 }
