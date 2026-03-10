@@ -2,6 +2,8 @@ package postgres
 
 import (
 	"context"
+	"errors"
+	"math"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -29,6 +31,9 @@ func (r *OutBoxRepository) Create(ctx context.Context, event *domain.OutboxEvent
 }
 
 func (r *OutBoxRepository) GetPendingEvents(ctx context.Context, limit int) ([]*domain.OutboxEvent, error) {
+	if limit < 0 || limit > math.MaxInt32 {
+		return nil, errors.New("invalid limit")
+	}
 	dbEvents, err := r.queries.GetPendingOutboxEvents(ctx, int32(limit))
 	if err != nil {
 		return nil, err
@@ -47,7 +52,6 @@ func (r *OutBoxRepository) GetPendingEvents(ctx context.Context, limit int) ([]*
 		events = append(events, event)
 	}
 	return events, nil
-
 }
 
 func (r *OutBoxRepository) MarkAsProcessed(ctx context.Context, id string) error {

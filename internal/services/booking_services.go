@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/mati/go-ticket/internal/api/dto"
 	"github.com/mati/go-ticket/internal/domain"
 	"github.com/mati/go-ticket/internal/postgres"
 )
@@ -56,7 +57,7 @@ func (bs *BookingService) CreateBooking(ctx context.Context, booking *domain.Boo
 		return err
 	}
 
-	eventData, err := json.Marshal(booking)
+	eventData, err := json.Marshal(dto.ToBookingResponse(booking))
 	if err != nil {
 		return err
 	}
@@ -76,7 +77,7 @@ func (bs *BookingService) CreateBooking(ctx context.Context, booking *domain.Boo
 		return err
 	}
 
-	slog.Info("Crated Booking and Outbox Event", "booking", booking, "outboxEvent", outboxEvent)
+	slog.Info("Crated Booking and Outbox Event", "booking", dto.ToBookingResponse(booking), "outboxEvent", outboxEvent)
 
 	return nil
 }
