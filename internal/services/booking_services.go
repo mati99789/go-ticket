@@ -65,6 +65,7 @@ func (bs *BookingService) CreateBooking(ctx context.Context, booking *domain.Boo
 		"CreateBooking",
 		eventData,
 		"booking_events_topic",
+		booking.ID(),
 	)
 	if err != nil {
 		return err

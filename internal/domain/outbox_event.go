@@ -20,10 +20,16 @@ type OutboxEvent struct {
 	createdAt   time.Time
 	updatedAt   time.Time
 	destination string
+	aggregateID uuid.UUID
 }
 
-func CreateOutboxEvent(eventName string, eventData []byte, destination string) (*OutboxEvent, error) {
-	if eventName == "" || eventData == nil || destination == "" {
+func CreateOutboxEvent(
+	eventName string,
+	eventData []byte,
+	destination string,
+	aggregateID uuid.UUID,
+) (*OutboxEvent, error) {
+	if eventName == "" || eventData == nil || destination == "" || aggregateID == uuid.Nil {
 		return nil, ErrOutboxEventInvalid
 	}
 	id := uuid.New()
@@ -38,6 +44,7 @@ func CreateOutboxEvent(eventName string, eventData []byte, destination string) (
 		createdAt:   createdAt,
 		updatedAt:   updatedAt,
 		destination: destination,
+		aggregateID: aggregateID,
 	}, nil
 }
 
@@ -47,7 +54,8 @@ func ReconstructOutboxEvent(id uuid.UUID,
 	status string,
 	createdAt time.Time,
 	updatedAt time.Time,
-	destination string) *OutboxEvent {
+	destination string,
+	aggregateID uuid.UUID) *OutboxEvent {
 	return &OutboxEvent{
 		id:          id,
 		eventName:   eventName,
@@ -56,6 +64,7 @@ func ReconstructOutboxEvent(id uuid.UUID,
 		createdAt:   createdAt,
 		updatedAt:   updatedAt,
 		destination: destination,
+		aggregateID: aggregateID,
 	}
 }
 
@@ -82,6 +91,10 @@ func (o *OutboxEvent) Destination() string {
 
 func (o *OutboxEvent) ID() uuid.UUID {
 	return o.id
+}
+
+func (o *OutboxEvent) AggregateID() uuid.UUID {
+	return o.aggregateID
 }
 
 type OutboxRepository interface {

@@ -25,6 +25,7 @@ func (r *OutBoxRepository) Create(ctx context.Context, event *domain.OutboxEvent
 		EventName:   event.EventName(),
 		EventData:   event.EventData(),
 		Destination: event.Destination(),
+		AggregateID: pgtype.UUID{Bytes: event.AggregateID(), Valid: true},
 	}
 	_, err := r.queries.CreateOutboxEvent(ctx, params)
 	return err
@@ -48,6 +49,7 @@ func (r *OutBoxRepository) GetPendingEvents(ctx context.Context, limit int) ([]*
 			dbEvent.CreatedAt.Time,
 			dbEvent.UpdatedAt.Time,
 			dbEvent.Destination,
+			uuid.UUID(dbEvent.AggregateID.Bytes),
 		)
 		events = append(events, event)
 	}

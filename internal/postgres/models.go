@@ -83,6 +83,7 @@ type OutboxEvent struct {
 	Destination string           `json:"destination"`
 	CreatedAt   pgtype.Timestamp `json:"created_at"`
 	UpdatedAt   pgtype.Timestamp `json:"updated_at"`
+	AggregateID pgtype.UUID      `json:"aggregate_id"`
 }
 
 type User struct {

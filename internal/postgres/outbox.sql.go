@@ -12,9 +12,9 @@ import (
 )
 
 const createOutboxEvent = `-- name: CreateOutboxEvent :one
-INSERT INTO outbox_events (id, event_name, event_data, destination)
-VALUES ($1, $2, $3, $4)
-RETURNING id, event_name, event_data, status, destination, created_at, updated_at
+INSERT INTO outbox_events (id, event_name, event_data, destination, aggregate_id)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, event_name, event_data, status, destination, created_at, updated_at, aggregate_id
 `
 
 type CreateOutboxEventParams struct {
@@ -22,6 +22,7 @@ type CreateOutboxEventParams struct {
 	EventName   string      `json:"event_name"`
 	EventData   []byte      `json:"event_data"`
 	Destination string      `json:"destination"`
+	AggregateID pgtype.UUID `json:"aggregate_id"`
 }
 
 func (q *Queries) CreateOutboxEvent(ctx context.Context, arg CreateOutboxEventParams) (OutboxEvent, error) {
@@ -30,6 +31,7 @@ func (q *Queries) CreateOutboxEvent(ctx context.Context, arg CreateOutboxEventPa
 		arg.EventName,
 		arg.EventData,
 		arg.Destination,
+		arg.AggregateID,
 	)
 	var i OutboxEvent
 	err := row.Scan(
@@ -40,12 +42,13 @@ func (q *Queries) CreateOutboxEvent(ctx context.Context, arg CreateOutboxEventPa
 		&i.Destination,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.AggregateID,
 	)
 	return i, err
 }
 
 const getPendingOutboxEvents = `-- name: GetPendingOutboxEvents :many
-SELECT id, event_name, event_data, status, destination, created_at, updated_at FROM outbox_events
+SELECT id, event_name, event_data, status, destination, created_at, updated_at, aggregate_id FROM outbox_events
 WHERE status = 'pending'
 ORDER BY created_at ASC
 LIMIT $1
@@ -69,6 +72,7 @@ func (q *Queries) GetPendingOutboxEvents(ctx context.Context, limit int32) ([]Ou
 			&i.Destination,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.AggregateID,
 		); err != nil {
 			return nil, err
 		}
