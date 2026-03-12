@@ -92,7 +92,13 @@ func run(logger *slog.Logger) error {
 	// === Repositories ===
 	eventRepository, bookingRepository, userRepository := setupRepositories(pool)
 	// === Services ===
-	bookingService, userService, outboxRepository := setupServices(eventRepository, bookingRepository, userRepository, authService, pool)
+	bookingService, userService, outboxRepository := setupServices(
+		eventRepository,
+		bookingRepository,
+		userRepository,
+		authService,
+		pool,
+	)
 	// === Handlers ===
 	eventHandler := api.NewHTTPHandler(eventRepository, bookingRepository, bookingService)
 	authHandler := api.NewAuthHandler(userService)
