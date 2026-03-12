@@ -22,6 +22,14 @@ func NewEventRepository(queries *Queries) *EventRepository {
 	return &EventRepository{queries: queries}
 }
 
+func (r *EventRepository) getQueries(ctx context.Context) *Queries {
+	tx := ExtractTx(ctx)
+	if tx != nil {
+		return r.queries.WithTx(tx)
+	}
+	return r.queries
+}
+
 // CreateEvent creates a new event in the database.
 func (r *EventRepository) CreateEvent(ctx context.Context, event *domain.Event) error {
 	startAt, endAt := event.StartAndEndAt()
@@ -40,7 +48,7 @@ func (r *EventRepository) CreateEvent(ctx context.Context, event *domain.Event) 
 		// G115: integer overflow conversion int -> int32 handled by domain
 	}
 
-	_, err := r.queries.CreateEvent(ctx, params)
+	_, err := r.getQueries(ctx).CreateEvent(ctx, params)
 	return err
 }
 
@@ -58,19 +66,19 @@ func (r *EventRepository) UpdateEvent(ctx context.Context, event *domain.Event) 
 		Capacity:  int32(event.Capacity()), //nolint:gosec // G115: integer overflow conversion int -> int32 handled by domain
 	}
 
-	_, err := r.queries.UpdateEvent(ctx, params)
+	_, err := r.getQueries(ctx).UpdateEvent(ctx, params)
 	return err
 }
 
 // DeleteEvent deletes an event from the database.
 func (r *EventRepository) DeleteEvent(ctx context.Context, id uuid.UUID) error {
-	err := r.queries.DeleteEvent(ctx, pgtype.UUID{Bytes: id, Valid: true})
+	err := r.getQueries(ctx).DeleteEvent(ctx, pgtype.UUID{Bytes: id, Valid: true})
 	return err
 }
 
 // GetEvent retrieves an event from the database.
 func (r *EventRepository) GetEvent(ctx context.Context, id uuid.UUID) (*domain.Event, error) {
-	row, err := r.queries.GetEvent(ctx, pgtype.UUID{Bytes: id, Valid: true})
+	row, err := r.getQueries(ctx).GetEvent(ctx, pgtype.UUID{Bytes: id, Valid: true})
 
 	if err != nil {
 		return nil, domain.ErrEventNotFound
@@ -91,7 +99,7 @@ func (r *EventRepository) GetEvent(ctx context.Context, id uuid.UUID) (*domain.E
 
 // ListEvents retrieves a list of events from the database.
 func (r *EventRepository) ListEvents(ctx context.Context) ([]*domain.Event, error) {
-	rows, err := r.queries.ListEvents(ctx, ListEventsParams{
+	rows, err := r.getQueries(ctx).ListEvents(ctx, ListEventsParams{
 		Limit:  10,
 		Offset: 0,
 	})
@@ -118,13 +126,13 @@ func (r *EventRepository) ListEvents(ctx context.Context) ([]*domain.Event, erro
 }
 
 func (r *EventRepository) ReserveSpots(ctx context.Context, eventID uuid.UUID, spots int) error {
-	_, err := r.queries.ReserveSpots(ctx, ReserveSpotsParams{
+	_, err := r.getQueries(ctx).ReserveSpots(ctx, ReserveSpotsParams{
 		ID:             pgtype.UUID{Bytes: eventID, Valid: true},
 		AvailableSpots: int32(spots), //nolint:gosec // G115: integer overflow conversion int -> int32
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			_, errGet := r.queries.GetEvent(ctx, pgtype.UUID{Bytes: eventID, Valid: true})
+			_, errGet := r.getQueries(ctx).GetEvent(ctx, pgtype.UUID{Bytes: eventID, Valid: true})
 			if errGet != nil {
 				return domain.ErrEventNotFound
 			}

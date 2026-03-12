@@ -44,7 +44,7 @@ func (t *PgxTxManager) RunInTx(ctx context.Context, fn func(ctx context.Context)
 	return nil
 }
 
-func extractTx(ctx context.Context) pgx.Tx {
+func ExtractTx(ctx context.Context) pgx.Tx {
 	tx, ok := ctx.Value(txKey{}).(pgx.Tx)
 	if !ok {
 		return nil

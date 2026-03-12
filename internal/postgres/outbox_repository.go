@@ -19,6 +19,14 @@ func NewOutBoxRepository(queries *Queries) *OutBoxRepository {
 	return &OutBoxRepository{queries: queries}
 }
 
+func (r *OutBoxRepository) getQueries(ctx context.Context) *Queries {
+	tx := ExtractTx(ctx)
+	if tx != nil {
+		return r.queries.WithTx(tx)
+	}
+	return r.queries
+}
+
 func (r *OutBoxRepository) Create(ctx context.Context, event *domain.OutboxEvent) error {
 	params := CreateOutboxEventParams{
 		ID:          pgtype.UUID{Bytes: event.ID(), Valid: true},
@@ -27,7 +35,7 @@ func (r *OutBoxRepository) Create(ctx context.Context, event *domain.OutboxEvent
 		Destination: event.Destination(),
 		AggregateID: pgtype.UUID{Bytes: event.AggregateID(), Valid: true},
 	}
-	_, err := r.queries.CreateOutboxEvent(ctx, params)
+	_, err := r.getQueries(ctx).CreateOutboxEvent(ctx, params)
 	return err
 }
 
@@ -35,7 +43,7 @@ func (r *OutBoxRepository) GetPendingEvents(ctx context.Context, limit int) ([]*
 	if limit < 0 || limit > math.MaxInt32 {
 		return nil, errors.New("invalid limit")
 	}
-	dbEvents, err := r.queries.GetPendingOutboxEvents(ctx, int32(limit))
+	dbEvents, err := r.getQueries(ctx).GetPendingOutboxEvents(ctx, int32(limit))
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +69,7 @@ func (r *OutBoxRepository) MarkAsProcessed(ctx context.Context, id string) error
 	if err != nil {
 		return err
 	}
-	err = r.queries.MarkOutBoxEventAsProcessed(ctx, pgtype.UUID{Bytes: parsedID, Valid: true})
+	err = r.getQueries(ctx).MarkOutBoxEventAsProcessed(ctx, pgtype.UUID{Bytes: parsedID, Valid: true})
 	if err != nil {
 		return err
 	}

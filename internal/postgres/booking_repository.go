@@ -20,6 +20,14 @@ func NewBookingRepository(queries *Queries) *BookingRepository {
 	}
 }
 
+func (br *BookingRepository) getQueries(ctx context.Context) *Queries {
+	tx := ExtractTx(ctx)
+	if tx != nil {
+		return br.Queries.WithTx(tx)
+	}
+	return br.Queries
+}
+
 func (br *BookingRepository) CreateBooking(ctx context.Context, booking *domain.Booking) error {
 	params := CreateBookingParams{
 		ID:        pgtype.UUID{Bytes: booking.ID(), Valid: true},
@@ -29,12 +37,12 @@ func (br *BookingRepository) CreateBooking(ctx context.Context, booking *domain.
 		CreatedAt: pgtype.Timestamptz{Time: booking.CreatedAt(), Valid: true},
 		UpdatedAt: pgtype.Timestamptz{Time: booking.UpdatedAt(), Valid: true},
 	}
-	_, err := br.Queries.CreateBooking(ctx, params)
+	_, err := br.getQueries(ctx).CreateBooking(ctx, params)
 	return err
 }
 
 func (br *BookingRepository) GetBookingByID(ctx context.Context, id uuid.UUID) (*domain.Booking, error) {
-	row, err := br.Queries.GetBookingByID(ctx, pgtype.UUID{Bytes: id, Valid: true})
+	row, err := br.getQueries(ctx).GetBookingByID(ctx, pgtype.UUID{Bytes: id, Valid: true})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrBookingNotFound
@@ -59,27 +67,27 @@ func (br *BookingRepository) UpdateBooking(ctx context.Context, booking *domain.
 		Status:    string(booking.Status()),
 		UpdatedAt: pgtype.Timestamptz{Time: booking.UpdatedAt(), Valid: true},
 	}
-	_, err := br.Queries.UpdateBooking(ctx, params)
+	_, err := br.getQueries(ctx).UpdateBooking(ctx, params)
 	return err
 }
 
 func (br *BookingRepository) DeleteBooking(ctx context.Context, id uuid.UUID) error {
-	err := br.Queries.DeleteBooking(ctx, pgtype.UUID{Bytes: id, Valid: true})
+	err := br.getQueries(ctx).DeleteBooking(ctx, pgtype.UUID{Bytes: id, Valid: true})
 	return err
 }
 
 func (br *BookingRepository) ConfirmBooking(ctx context.Context, id uuid.UUID) error {
-	_, err := br.Queries.ConfirmBooking(ctx, pgtype.UUID{Bytes: id, Valid: true})
+	_, err := br.getQueries(ctx).ConfirmBooking(ctx, pgtype.UUID{Bytes: id, Valid: true})
 	return err
 }
 
 func (br *BookingRepository) CancelBooking(ctx context.Context, id uuid.UUID) error {
-	_, err := br.Queries.CancelBooking(ctx, pgtype.UUID{Bytes: id, Valid: true})
+	_, err := br.getQueries(ctx).CancelBooking(ctx, pgtype.UUID{Bytes: id, Valid: true})
 	return err
 }
 
 func (br *BookingRepository) ListBookings(ctx context.Context) ([]domain.Booking, error) {
-	rows, err := br.Queries.ListBookings(ctx, ListBookingsParams{
+	rows, err := br.getQueries(ctx).ListBookings(ctx, ListBookingsParams{
 		Limit:  10,
 		Offset: 0,
 	})

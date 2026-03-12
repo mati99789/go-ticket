@@ -20,6 +20,7 @@ import (
 	"github.com/mati/go-ticket/internal/postgres"
 	"github.com/mati/go-ticket/internal/ratelimit"
 	"github.com/mati/go-ticket/internal/services"
+	"github.com/mati/go-ticket/internal/workers"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
@@ -91,13 +92,20 @@ func run(logger *slog.Logger) error {
 	// === Repositories ===
 	eventRepository, bookingRepository, userRepository := setupRepositories(pool)
 	// === Services ===
-	bookingService, userService := setupServices(eventRepository, bookingRepository, userRepository, authService, pool)
+	bookingService, userService, outboxRepository := setupServices(eventRepository, bookingRepository, userRepository, authService, pool)
 	// === Handlers ===
 	eventHandler := api.NewHTTPHandler(eventRepository, bookingRepository, bookingService)
 	authHandler := api.NewAuthHandler(userService)
 
 	mux := http.NewServeMux()
 	setupRoutes(mux, authService, eventHandler, authHandler, rateLimitAuth, rateLimitAPI)
+
+	mockBroker := workers.NewLogBroker()
+	relay := workers.NewOutboxRelay(outboxRepository, mockBroker)
+
+	go func() {
+		relay.Start(context.Background())
+	}()
 
 	srv := setupServer(mux)
 
@@ -214,10 +222,10 @@ func setupServices(
 	userRepository *postgres.UserRepository,
 	authService *auth.JWTService,
 	pool *pgxpool.Pool,
-) (*services.BookingService, *services.UserService) {
+) (*services.BookingService, *services.UserService, *postgres.OutBoxRepository) {
 	transactionManager := postgres.NewPgxTxManager(pool)
 	outboxRepository := postgres.NewOutBoxRepository(postgres.New(pool))
 	bookingService := services.NewBookingService(eventRepository, bookingRepository, outboxRepository, transactionManager)
 	userService := services.NewUserService(userRepository, authService)
-	return bookingService, userService
+	return bookingService, userService, outboxRepository
 }
