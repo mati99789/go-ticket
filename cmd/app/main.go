@@ -115,7 +115,11 @@ func run(logger *slog.Logger) error {
 	if err != nil {
 		return err
 	}
-	defer producer.Close()
+	defer func() {
+		if err := producer.Close(); err != nil {
+			logger.Error("failed to close kafka producer", "error", err)
+		}
+	}()
 
 	go func() {
 		relay.Start(ctx)
