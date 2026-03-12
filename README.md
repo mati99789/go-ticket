@@ -214,22 +214,23 @@ To pass Code Review, every PR must meet the strict standards defined in `.agent/
 - [x] **Phase 3: HTTP API** (REST Handlers, JSON, Graceful Shutdown)
 - [x] **Phase 3.5: Booking System** (Transactions, Atomic Reservations)
 - [x] **Phase 4: Polish** (DTO Layer, Error Mapping, Integration Tests)
-- [x] **Phase 5: Authentication** (JWT, bcrypt, Security fixes) - 80% complete
-- [ ] **Phase 6: Infrastructure** (Redis, Rate Limiting, nginx)
+- [x] **Phase 5: Authentication** (JWT, bcrypt, Security fixes) 
+- [x] **Phase 6: Infrastructure & Security** (Redis, Rate Limiting, The Outbox Pattern Background Worker)
+- [🔄] **Phase 6.5: Event Streaming** (Kafka KRaft, IBM/sarama)
 - [ ] **Phase 7: DevOps** (Docker, CI/CD, Observability)
 - [ ] **Phase 8: Cloud** (AWS Deployment, Terraform)
 
 ### Current Focus
 
-**Authentication & Authorization** - Securing the application:
+**Event Streaming & Microservices Prep (Kafka)** - Decoupling the monolith:
 
-- ✅ JWT service (token generation/verification)
-- ✅ Password hashing (bcrypt)
-- ✅ User registration/login endpoints
-- ✅ Security fixes (user enumeration, timing attacks)
-- 🔄 Routing integration
-- 🔄 Auth middleware (JWT verification)
-- 📋 Rate limiting (requires Redis)
+- ✅ Transaction Manager & DDD refactor
+- ✅ Outbox Pattern (Repository & Event generation)
+- ✅ Background Worker (`OutboxRelay` Goroutine loop)
+- ✅ Local Load Testing (`k6`) and Rate Limiting
+- ✅ Kafka KRaft Docker Infrastructure
+- 🔄 Kafka `SyncProducer` implementation in Go using `sarama`
+- 📋 Broker injection in `main.go`
 
 ## 📈 Test Coverage
 

@@ -10,8 +10,9 @@
 |-------|--------|----------|
 | Phase 1: Core Domain & Repository | ✅ COMPLETE | 100% |
 | Phase 2: API Layer & Handlers | ✅ COMPLETE | 100% |
-| Phase 3: Authentication & Authorization | ✅ COMPLETE | 100% |
-| Phase 4: Security & Infrastructure | 🔄 IN PROGRESS | 75% |
+| Phase 4: Security & Infrastructure | ✅ COMPLETE | 100% |
+| Phase 4.5: Event Streaming (Microservices Prep) | ✅ COMPLETE | 100% |
+| Phase 4.6: Notification Service (RabbitMQ + Email) | 📋 PLANNED | 0% |
 | Phase 5: Testing & CI/CD | 📋 PLANNED | 0% |
 | Phase 6: Production Deployment | 📋 PLANNED | 0% |
 
@@ -89,16 +90,54 @@
 - [x] Code quality: 36 golangci-lint issues fixed (errcheck, gosec, lll, whitespace)
 - [x] TODO backlog: `funlen` in main.go, `gocyclo` in MapDomainError
 
-### Rate Limiting
-- [ ] Add Redis to docker-compose
-- [ ] Implement rate limiting middleware
-  - [ ] IP-based: 10 attempts / 15 minutes
-  - [ ] Email-based: 5 attempts / 15 minutes
+### Rate Limiting & Load Testing ✅
+- [x] Add Redis to docker-compose
+- [x] Implement rate limiting middleware (IP-based and User-based)
+- [x] K6 Load Testing (verify race conditions and rate limits)
+
+---
+
+## Phase 4.5: Event Streaming (Microservices Prep) 🔄
+
+### The Outbox Pattern ✅
+- [x] Implement Transaction Manager (ACID guarantees for postgres)
+- [x] Create Outbox Repository and database table
+- [x] `BookingService` atomicity (create booking + outbox event in one TX)
+- [x] `OutboxRelay` background worker loop (Goroutine)
+- [x] Graceful shutdown for workers
+- [x] Mock Broker for local console testing
+
+### Message Broker Integration (Kafka) ✅
+- [x] Add Kafka KRaft to `docker-compose.yml`
+- [x] Dual Listeners (INTERNAL `kafka:9092` + EXTERNAL `localhost:9094`)
+- [x] Implement `domain.MessageBroker` using `IBM/sarama` (`internal/kafka/kafka_broker.go`)
+- [x] Configure `SyncProducer` for At-Least-Once Delivery
+- [x] Wire Kafka Broker into `cmd/app/main.go` (`setupKafkaRelay`)
+- [x] Verify message consumption with `kafka-console-consumer`
 
 ### Additional Security
 - [ ] CORS configuration
 - [ ] Request size limits
 - [ ] Security headers (CSP, HSTS, etc.)
+
+---
+
+## Phase 4.6: Notification Service (RabbitMQ + Email) 📋
+
+> **Prerequisites**: Complete Phase 4.5
+
+### Kafka Consumer
+- [ ] Implement Kafka Consumer for `booking_events_topic`
+- [ ] Wire consumer goroutine in `main.go`
+
+### RabbitMQ Integration
+- [ ] Add RabbitMQ to `docker-compose.yml`
+- [ ] Implement RabbitMQ Publisher (`internal/rabbitmq/publisher.go`)
+- [ ] Implement Email Worker (`internal/workers/email_worker.go`)
+
+### Email Sending
+- [ ] SMTP / Resend / SendGrid integration
+- [ ] Email templates (booking confirmation)
 
 ---
 
@@ -147,10 +186,9 @@
 
 ## 🎯 Next Steps (Immediate)
 
-1. **Rate Limiting** - Redis-based, IP+email hybrid (Phase 4)
-2. **CORS & Security Headers** - CSP, HSTS, request size limits
-3. **Load Testing (k6)** - verify race conditions under load
-4. **Move to Phase 5** - GitHub Actions CI/CD pipeline
+1. **CORS & Security Headers** - CSP, HSTS, request size limits.
+2. **RabbitMQ + Email Notifications** - Kafka Consumer → RabbitMQ → Email Worker.
+3. **Move to Phase 5** - GitHub Actions CI/CD pipeline improvements.
 
 ---
 

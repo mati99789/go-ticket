@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/IBM/sarama"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	_ "github.com/mati/go-ticket/docs"
@@ -17,6 +18,7 @@ import (
 	"github.com/mati/go-ticket/internal/api/middleware"
 	"github.com/mati/go-ticket/internal/auth"
 	"github.com/mati/go-ticket/internal/domain"
+	"github.com/mati/go-ticket/internal/kafka"
 	"github.com/mati/go-ticket/internal/postgres"
 	"github.com/mati/go-ticket/internal/ratelimit"
 	"github.com/mati/go-ticket/internal/services"
@@ -106,13 +108,18 @@ func run(logger *slog.Logger) error {
 	mux := http.NewServeMux()
 	setupRoutes(mux, authService, eventHandler, authHandler, rateLimitAuth, rateLimitAPI)
 
-	mockBroker := workers.NewLogBroker()
-	relay := workers.NewOutboxRelay(outboxRepository, mockBroker)
+	ctx, relayCancel := context.WithCancel(context.Background())
+	defer relayCancel()
+
+	producer, relay, err := setupKafkaRelay(outboxRepository)
+	if err != nil {
+		return err
+	}
+	defer producer.Close()
 
 	go func() {
-		relay.Start(context.Background())
+		relay.Start(ctx)
 	}()
-
 	srv := setupServer(mux)
 
 	go func() {
@@ -234,4 +241,27 @@ func setupServices(
 	bookingService := services.NewBookingService(eventRepository, bookingRepository, outboxRepository, transactionManager)
 	userService := services.NewUserService(userRepository, authService)
 	return bookingService, userService, outboxRepository
+}
+
+func setupKafkaRelay(outboxRepository *postgres.OutBoxRepository) (sarama.SyncProducer, *workers.OutboxRelay, error) {
+	kafkaAddr := os.Getenv("KAFKA_ADDR")
+	if kafkaAddr == "" {
+		return nil, nil, errors.New("KAFKA_ADDR is not set")
+	}
+
+	config := sarama.NewConfig()
+	config.Producer.RequiredAcks = sarama.WaitForAll
+	config.Producer.Retry.Max = 5
+	config.Producer.Return.Successes = true
+	config.Producer.Return.Errors = true
+
+	producer, err := sarama.NewSyncProducer([]string{kafkaAddr}, config)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create kafka producer: %w", err)
+	}
+
+	kafkaBroker := kafka.NewKafkaBroker(producer)
+	relay := workers.NewOutboxRelay(outboxRepository, kafkaBroker)
+
+	return producer, relay, nil
 }
