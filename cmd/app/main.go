@@ -45,7 +45,7 @@ func main() {
 }
 
 func run(logger *slog.Logger) error {
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load(".env", ".env.local"); err != nil {
 		logger.Warn("Failed to load environment variables", "error", err)
 	}
 

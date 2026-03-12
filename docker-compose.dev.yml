@@ -1,0 +1,9 @@
+# Override for local development
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# Starts only infrastructure (postgres, redis, kafka) without the app container
+# Then run your app locally: go run cmd/app/main.go
+
+services:
+  app:
+    profiles:
+      - disabled

@@ -14,6 +14,8 @@ coverage.html
 
 # Environment variables (CRITICAL)
 .env
+.env.local
+.env.docker
 
 # IDE specific
 .idea/
@@ -30,3 +32,5 @@ app # Compiled binary from 'go build -o app'
 
 # Vendor (chyba że chcesz vendoring)
 vendor/
+
+
