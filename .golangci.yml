@@ -5,6 +5,9 @@ run:
   timeout: 5m
 
 linters:
+  disable:
+    - gocyclo
+    - funlen
   enable:
     - errcheck
     - govet

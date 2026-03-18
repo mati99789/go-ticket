@@ -70,11 +70,30 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     env_file:
       - .env
       - .env.docker
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: go_ticket_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
 volumes:
   postgres_data:
   redis_data:
   kafka_data:
+  rabbitmq_data:

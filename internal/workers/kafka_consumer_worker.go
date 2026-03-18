@@ -52,7 +52,6 @@ func (k *KafkaConsumerWorker) Start(ctx context.Context) error {
 			if backoff > maxBackoff {
 				backoff = maxBackoff
 			}
-
 		} else {
 			backoff = initialBackoff
 		}

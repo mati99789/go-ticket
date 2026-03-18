@@ -106,7 +106,15 @@
   - [x] Implement Transactional Outbox Pattern in PostgreSQL (prevents dual-write problem)
   - [x] Implement KafkaBroker SyncProducer (`internal/kafka/kafka_broker.go` via IBM/sarama)
   - [x] Wire Kafka Broker into `cmd/app/main.go` via `setupKafkaRelay`
-  - [ ] Implement Kafka Consumer for `booking_events_topic`
+  - [x] Implement Kafka Consumer for `booking_events_topic`
+    - [x] `domain.MessageConsumer` interface (`internal/domain/message_consumer.go`)
+    - [x] `domain.EventHandler` interface (`internal/domain/eventhandle.go`)
+    - [x] `KafkaConsumer` implementation (`internal/kafka/kafka_consumer.go`)
+    - [x] `KafkaConsumerWorker` with exponential backoff + interruptible sleep (`internal/workers/kafka_consumer_worker.go`)
+    - [x] `BookingEventHandler` (`internal/event_handler/booking_event_handler.go`)
+    - [x] Wire consumer in `main.go` via `setupKafkaConsumer` with graceful shutdown
+    - [x] Error handling via `erChan` (buffer 3) for relay, consumer, server goroutines
+    - [x] Fixed shadow variable `ctx` → `initialCtx` / `workerCtx`
   - [ ] Implement RabbitMQ Publisher for email task queue
   - [ ] Implement Email Worker goroutine
 - [ ] **Microservices**: Extract Notification/Payment Service. <!-- id: 28 -->

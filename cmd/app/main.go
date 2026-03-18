@@ -21,9 +21,11 @@ import (
 	"github.com/mati/go-ticket/internal/event_handler"
 	"github.com/mati/go-ticket/internal/kafka"
 	"github.com/mati/go-ticket/internal/postgres"
+	"github.com/mati/go-ticket/internal/rabbitmq"
 	"github.com/mati/go-ticket/internal/ratelimit"
 	"github.com/mati/go-ticket/internal/services"
 	"github.com/mati/go-ticket/internal/workers"
+	amqp "github.com/rabbitmq/amqp091-go"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
@@ -52,6 +54,7 @@ func run(logger *slog.Logger) error {
 
 	dbUrl := os.Getenv("DATABASE_URL")
 	secretKey := os.Getenv("JWT_SECRET_KEY")
+	rabbitMQURL := os.Getenv("RABBITMQ_URL")
 
 	if dbUrl == "" {
 		return errors.New("DATABASE_URL is not set")
@@ -113,6 +116,25 @@ func run(logger *slog.Logger) error {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 
+	// RabbitMQ
+
+	connection, rabbitMQPublisher, err := setupRabbitMQ(rabbitMQURL)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err := connection.Close(); err != nil {
+			logger.Error("failed to close connection", "error", err)
+		}
+	}()
+
+	defer func() {
+		if err := rabbitMQPublisher.Close(); err != nil {
+			logger.Error("failed to close rabbitmq publisher", "error", err)
+		}
+	}()
+
 	// Producer
 	workerCtx, relayCancel := context.WithCancel(context.Background())
 	defer relayCancel()
@@ -134,7 +156,7 @@ func run(logger *slog.Logger) error {
 	}()
 
 	// Consumer
-	bookingEvent := event_handler.NewBookingEventHandler(logger)
+	bookingEvent := event_handler.NewBookingEventHandler(logger, rabbitMQPublisher)
 	consumerGroup, consumerWorker, err := setupKafkaConsumer(logger, bookingEvent)
 	if err != nil {
 		return err
@@ -249,7 +271,6 @@ func gracefulShutdown(srv *http.Server, logger *slog.Logger) error {
 func runServer(srv *http.Server) error {
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		return fmt.Errorf("failed to start server: %w", err)
-
 	}
 	return nil
 }
@@ -306,7 +327,9 @@ func setupKafkaRelay(outboxRepository *postgres.OutBoxRepository) (sarama.SyncPr
 	return producer, relay, nil
 }
 
-func setupKafkaConsumer(logger *slog.Logger, event domain.EventHandler) (sarama.ConsumerGroup, *workers.KafkaConsumerWorker, error) {
+func setupKafkaConsumer(
+	logger *slog.Logger,
+	event domain.EventHandler) (sarama.ConsumerGroup, *workers.KafkaConsumerWorker, error) {
 	const (
 		topic = "booking_events_topic"
 	)
@@ -316,7 +339,9 @@ func setupKafkaConsumer(logger *slog.Logger, event domain.EventHandler) (sarama.
 	}
 
 	config := sarama.NewConfig()
-	config.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategyRoundRobin
+	config.Consumer.Group.Rebalance.GroupStrategies = []sarama.BalanceStrategy{
+		sarama.NewBalanceStrategyRoundRobin(),
+	}
 	config.Consumer.Offsets.Initial = sarama.OffsetNewest
 
 	consumerGroup, err := sarama.NewConsumerGroup([]string{kafkaAddr}, "bookingEvent-group", config)
@@ -327,4 +352,18 @@ func setupKafkaConsumer(logger *slog.Logger, event domain.EventHandler) (sarama.
 	kafkaConsumer := kafka.NewKafkaConsumer(consumerGroup, []string{topic}, logger, event)
 	kafkaConsumerWorker := workers.NewKafkaConsumerWorker(kafkaConsumer, logger)
 	return consumerGroup, kafkaConsumerWorker, nil
+}
+
+func setupRabbitMQ(url string) (*amqp.Connection, *rabbitmq.RabbitMQPublisher, error) {
+	conn, err := amqp.Dial(url)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to connect to RabbitMQ: %w", err)
+	}
+
+	mqPublisher, err := rabbitmq.NewRabbitMQPublisher(conn)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to connect to RabbitMQ: %w", err)
+	}
+
+	return conn, mqPublisher, nil
 }

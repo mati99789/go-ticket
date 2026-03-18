@@ -19,7 +19,7 @@ This document tracks the current state of the `go-ticket` project and the roadma
 | | Orchestration | None | Kubernetes (Helm/Kustomize) | 🔴 Planned |
 | | IaC | None | Terraform / OpenTofu | 🔴 Planned |
 | | CI/CD | GitHub Actions (CI + CD) | GitHub Actions (Lint, Test, Build, Push) | 🟢 Done |
-| **Messaging** | Async | Outbox + Kafka SyncProducer | Kafka Consumer + RabbitMQ (Task Queue) | 🟡 Partial |
+| **Messaging** | Async | Outbox + Kafka Producer + Consumer | RabbitMQ (Task Queue) + Email Worker | 🟡 Kafka done |
 | **Quality** | Testing | Integration Tests (Testcontainers) | E2E, Load (k6), Property-based Tests | 🟢 Int. tests done |
 | | Observability | Structured logging (slog/JSON) | Distributed Tracing (OTEL), Metrics (Prometheus) | 🟡 Logging only |
 
@@ -60,16 +60,16 @@ We do not build everything at once. We follow an iterative "Evolutionary Archite
 - [x] Kafka KRaft Docker infrastructure (INTERNAL:9092 + EXTERNAL:9094 listeners)
 - [x] `domain.MessageBroker` interface + Kafka `SyncProducer` implementation (IBM/sarama)
 - [x] Wire Kafka Broker into `cmd/app/main.go` via `setupKafkaRelay`
-- [ ] **Swagger/OpenAPI**: Auto-generated docs (`swaggo`) — documented API is a professional requirement
+- [x] **Swagger/OpenAPI**: Auto-generated docs (`swaggo`) — Swagger UI at `/swagger/`
 - [ ] **Correlation IDs**: Request tracing through middleware — essential for distributed debugging
 - [ ] **Pagination & Filtering**: `limit/offset` for ListEvents + date/price range filters
 
-### Phase 4: Notification Service (RabbitMQ + Email) 📋 PLANNED
+### Phase 4: Notification Service (RabbitMQ + Email) 🔄 IN PROGRESS
 
 > Prerequisites: Complete Phase 3
 
-- [ ] Kafka Consumer for `booking_events_topic`
-- [ ] Wire consumer goroutine in `main.go` with graceful shutdown
+- [x] Kafka Consumer for `booking_events_topic`
+- [x] Wire consumer goroutine in `main.go` with graceful shutdown + `erChan` error propagation
 - [ ] RabbitMQ added to `docker-compose.yml`
 - [ ] RabbitMQ Publisher (`internal/rabbitmq/publisher.go`)
 - [ ] Email Worker (`internal/workers/email_worker.go`)
@@ -100,10 +100,9 @@ We do not build everything at once. We follow an iterative "Evolutionary Archite
 
 ## 3. Immediate Next Steps (Priority Order)
 
-1. **Swagger/OpenAPI** — documented API is a professional standard
-2. **Correlation IDs** — essential for debugging distributed systems
-3. **Kafka Consumer** → **RabbitMQ** → **Email Worker** — complete the event-driven pipeline
-4. **Kubernetes** (local Kind/Minikube) — deploy the containerized app
+1. **Correlation IDs** — essential for debugging distributed systems
+2. **RabbitMQ** → **Email Worker** — complete the event-driven pipeline
+3. **Kubernetes** (local Kind/Minikube) — deploy the containerized app
 5. **Terraform** — infrastructure as code provisioning
 6. **Microservices split** — extract BookingService / NotificationService when the domain boundaries are clear
 
