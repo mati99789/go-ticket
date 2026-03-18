@@ -2,6 +2,7 @@ package workers
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -17,7 +18,7 @@ func NewOutboxRelay(outboxRepo domain.OutboxRepository, broker domain.MessageBro
 	return &OutboxRelay{outboxRepo: outboxRepo, broker: broker}
 }
 
-func (r *OutboxRelay) Start(ctx context.Context) {
+func (r *OutboxRelay) Start(ctx context.Context) error {
 	ticker := time.NewTicker(time.Second * 2)
 
 	defer ticker.Stop()
@@ -26,23 +27,25 @@ func (r *OutboxRelay) Start(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			slog.Info("Outbox Relay is shuttiing down...")
-			return
+			return nil
 		case <-ticker.C:
-			r.processOutbox(ctx)
+			err := r.processOutbox(ctx)
+			if err != nil {
+				return err
+			}
 		}
 	}
 }
 
-func (r *OutboxRelay) processOutbox(ctx context.Context) {
+func (r *OutboxRelay) processOutbox(ctx context.Context) error {
 	events, err := r.outboxRepo.GetPendingEvents(ctx, 50)
 
 	if len(events) == 0 {
-		return
+		return nil
 	}
 
 	if err != nil {
-		slog.Error("Failed to get pending events", "error", err)
-		return
+		return fmt.Errorf("failed to fetch outbox events: %w", err)
 	}
 
 	for _, event := range events {
@@ -56,4 +59,6 @@ func (r *OutboxRelay) processOutbox(ctx context.Context) {
 			continue
 		}
 	}
+
+	return nil
 }

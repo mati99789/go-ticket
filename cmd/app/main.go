@@ -18,6 +18,7 @@ import (
 	"github.com/mati/go-ticket/internal/api/middleware"
 	"github.com/mati/go-ticket/internal/auth"
 	"github.com/mati/go-ticket/internal/domain"
+	"github.com/mati/go-ticket/internal/event_handler"
 	"github.com/mati/go-ticket/internal/kafka"
 	"github.com/mati/go-ticket/internal/postgres"
 	"github.com/mati/go-ticket/internal/ratelimit"
@@ -64,10 +65,10 @@ func run(logger *slog.Logger) error {
 		return fmt.Errorf("failed to create JWT service: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	initialCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	pool, err := pgxpool.New(ctx, dbUrl)
+	pool, err := pgxpool.New(initialCtx, dbUrl)
 	if err != nil {
 		return fmt.Errorf("failed to create database connection pool: %w", err)
 	}
@@ -108,9 +109,13 @@ func run(logger *slog.Logger) error {
 	mux := http.NewServeMux()
 	setupRoutes(mux, authService, eventHandler, authHandler, rateLimitAuth, rateLimitAPI)
 
-	ctx, relayCancel := context.WithCancel(context.Background())
-	defer relayCancel()
+	erChan := make(chan error, 3)
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
 
+	// Producer
+	workerCtx, relayCancel := context.WithCancel(context.Background())
+	defer relayCancel()
 	producer, relay, err := setupKafkaRelay(outboxRepository)
 	if err != nil {
 		return err
@@ -122,20 +127,52 @@ func run(logger *slog.Logger) error {
 	}()
 
 	go func() {
-		relay.Start(ctx)
+		err := relay.Start(workerCtx)
+		if err != nil {
+			erChan <- fmt.Errorf("relay error: %w", err)
+		}
+	}()
+
+	// Consumer
+	bookingEvent := event_handler.NewBookingEventHandler(logger)
+	consumerGroup, consumerWorker, err := setupKafkaConsumer(logger, bookingEvent)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := consumerGroup.Close(); err != nil {
+			logger.Error("failed to close consumer group", "error", err)
+		}
+	}()
+
+	go func() {
+		err := consumerWorker.Start(workerCtx)
+		if err != nil {
+			erChan <- fmt.Errorf("consumer error: %w", err)
+		}
 	}()
 	srv := setupServer(mux)
 
 	go func() {
 		if err := runServer(srv); err != nil {
-			logger.Error("Failed to start server", "error", err)
+			erChan <- fmt.Errorf("failed to start server %w", err)
 		}
 	}()
 
 	logger.Info("Server started on :8080")
 
-	// Wait for a signal and then shutdown the server
-	gracefulShutdown(srv, logger)
+	select {
+	case err := <-erChan:
+		logger.Error("Worker failed", "error", err)
+	case <-stop:
+		logger.Info("Shutdown signal received")
+	}
+
+	relayCancel()
+
+	if err := gracefulShutdown(srv, logger); err != nil {
+		logger.Error("Shutdown error", "error", err)
+	}
 	return nil
 }
 
@@ -194,26 +231,25 @@ func setupServer(mux *http.ServeMux) *http.Server {
 	}
 }
 
-func gracefulShutdown(srv *http.Server, logger *slog.Logger) {
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt)
-
-	<-stop
+func gracefulShutdown(srv *http.Server, logger *slog.Logger) error {
 	logger.Info("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		logger.Error("Failed to shutdown server", "error", err)
+		return fmt.Errorf("failed to shutdown server: %w", err)
 	}
 
 	logger.Info("Server shutdown successfully")
+
+	return nil
 }
 
 func runServer(srv *http.Server) error {
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		return fmt.Errorf("failed to start server: %w", err)
+
 	}
 	return nil
 }
@@ -268,4 +304,27 @@ func setupKafkaRelay(outboxRepository *postgres.OutBoxRepository) (sarama.SyncPr
 	relay := workers.NewOutboxRelay(outboxRepository, kafkaBroker)
 
 	return producer, relay, nil
+}
+
+func setupKafkaConsumer(logger *slog.Logger, event domain.EventHandler) (sarama.ConsumerGroup, *workers.KafkaConsumerWorker, error) {
+	const (
+		topic = "booking_events_topic"
+	)
+	kafkaAddr := os.Getenv("KAFKA_ADDR")
+	if kafkaAddr == "" {
+		return nil, nil, errors.New("KAFKA_ADDR is not set")
+	}
+
+	config := sarama.NewConfig()
+	config.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategyRoundRobin
+	config.Consumer.Offsets.Initial = sarama.OffsetNewest
+
+	consumerGroup, err := sarama.NewConsumerGroup([]string{kafkaAddr}, "bookingEvent-group", config)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create consumer group: %w", err)
+	}
+
+	kafkaConsumer := kafka.NewKafkaConsumer(consumerGroup, []string{topic}, logger, event)
+	kafkaConsumerWorker := workers.NewKafkaConsumerWorker(kafkaConsumer, logger)
+	return consumerGroup, kafkaConsumerWorker, nil
 }

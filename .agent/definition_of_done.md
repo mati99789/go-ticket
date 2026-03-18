@@ -1,21 +1,46 @@
 # Definition of Done (DoD)
 
-Aby zadanie (Ticket/Task) zostało uznane za zakończone, musi spełniać poniższe kryteria. Brak któregokolwiek punktu = Odrzucenie w Code Review.
+For a task (Ticket/Task) to be considered complete, it must meet **all** of the following criteria. Missing any single point = Rejected in Code Review.
 
-## 1. Jakość Kodu
-*   [ ] **Linter Clean**: `golangci-lint run` nie zgłasza żadnych błędów.
-*   [ ] **Zero Magic Numbers/Strings**: Wszystkie stałe są wyniesione do `const`.
-*   [ ] **Meaningful Names**: Zmienne `x`, `data`, `temp` są zakazane. Nazwa musi oddawać intencję biznesową.
-*   [ ] **Error Handling**: Każdy błąd jest obsłużony (handle) lub zwrócony (wrap with context). Ignorowanie błędów (`_`) jest zabronione.
+---
 
-## 2. Testy
-*   [ ] **Unit Tests**: Logika biznesowa ma pokrycie testami (Table Driven Tests).
-*   [ ] **Green Build**: Wszystkie testy (`go test ./...`) przechodzą.
+## 1. Code Quality
 
-## 3. Architektura
-*   [ ] **Dependency Rule**: Domena nie zależy od zewnętrznych bibliotek (Database, HTTP).
-*   [ ] **Responsibility**: Funkcja/Metoda robi tylko jedną rzecz (Single Responsibility Principle).
+- [ ] **Linter Clean**: `golangci-lint run` reports zero errors
+- [ ] **Zero Magic Numbers/Strings**: All constants are extracted to `const` with meaningful names
+- [ ] **Meaningful Names**: Variables `x`, `data`, `temp` are forbidden — names must reflect business intent
+- [ ] **Error Handling**: Every error is handled or returned (wrapped with context). Ignoring errors (`_`) is forbidden
 
-## 4. Git & Historia
-*   [ ] **Commit Message**: Zgodny z Conventional Commits (np. `feat: add event structure`, `fix: calculation error`).
-*   [ ] **Clean History**: Brak commitów typu "wip", "fix tyop". Squash przed merge'em.
+---
+
+## 2. Tests
+
+- [ ] **Unit Tests**: Business logic has test coverage using Table-Driven Tests
+- [ ] **Green Build**: All tests (`go test ./...`) pass with zero failures
+- [ ] **Race Clean**: `go test -race ./...` passes with zero race conditions detected
+
+---
+
+## 3. Architecture
+
+- [ ] **Dependency Rule**: The domain layer does not import external libraries (Database, HTTP, etc.)
+- [ ] **Single Responsibility**: Every function/method does exactly one thing — if you need "and" to describe it, split it
+
+---
+
+## 4. Git & History
+
+- [ ] **Commit Message**: Follows Conventional Commits format (e.g., `feat: add event structure`, `fix: calculation error`)
+- [ ] **Clean History**: No "wip", "fix typo", or "temp" commits. Squash before merge
+- [ ] **English Only**: All commit messages and code comments are in English
+
+---
+
+## 5. Documentation (for significant changes)
+
+- [ ] **ADR**: If an architectural decision was made, an ADR is created using `.agent/adr_template.md`
+- [ ] **Roadmap updated**: `.agent/task.md` reflects the completed task
+
+---
+
+> **Mentorship Note**: The DoD is not a bureaucratic checklist — it is the standard that separates "it works on my machine" from "it works in production."

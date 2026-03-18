@@ -1,34 +1,40 @@
 # Load Tests — k6
 
-## Cel
+## Purpose
 
-Weryfikacja że system rezerwacji **nie double-bookuje** pod prawdziwym obciążeniem HTTP (cały stack: middleware, auth, rate limiting, DB).
+Verify that the booking system **does not double-book** under real HTTP load (full stack: middleware, auth, rate limiting, database).
 
-Uzupełnienie do integration testów (`TestEventRepository_ReserveSpots_Concurrent`) które testują tylko warstwę repozytorium.
+This complements the integration tests (`TestEventRepository_ReserveSpots_Concurrent`) which only test the repository layer in isolation.
 
-## Pliki
+---
 
-| Plik                  | Status       | Opis                                                  |
+## Files
+
+| File | Status | Description |
 | --------------------- | ------------ | ----------------------------------------------------- |
-| `seed.sql`            | ✅ Gotowy    | Dane testowe: organizer user + event (capacity=10000) |
-| `booking_scenario.js` | 🚧 W trakcie | Scenariusz k6 — wymaga dokończenia (patrz niżej)      |
+| `seed.sql` | Ready | Test data: organizer user + event (capacity=10000) |
+| `booking_scenario.js` | Complete | k6 scenario: setup() login → default() concurrent bookings |
 
-## Dane testowe (seed.sql)
+---
 
-Seed tworzy:
+## Test Data (seed.sql)
 
-- **User**: `organizer@loadtest.com` / `LoadTest123!` / rola: `organizer`
+The seed creates:
+
+- **User**: `organizer@loadtest.com` / `LoadTest123!` / role: `organizer`
 - **Event**: `a0000000-0000-0000-0000-000000000001` / capacity: `10000`
 
-Hasło bcrypt (cost=12): `$2a$12$YwRyt8wAQrp2TX9rNDLSye9TZ2pgILU7cMVbi4ecYAqA6EsIPRQge`
+bcrypt hash (cost=12): `$2a$12$YwRyt8wAQrp2TX9rNDLSye9TZ2pgILU7cMVbi4ecYAqA6EsIPRQge`
 
-## Jak uruchomić (docelowo)
+---
 
-### 1. Zainstaluj k6
+## How to Run
+
+### 1. Install k6
 
 ```bash
 sudo snap install k6
-# lub przez apt:
+# or via apt:
 sudo apt-get install gnupg
 curl -s https://dl.k6.io/key.gpg | sudo apt-key add -
 echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
@@ -36,99 +42,64 @@ sudo apt-get update && sudo apt-get install k6
 k6 version
 ```
 
-### 2. Uruchom aplikację
+### 2. Start the application
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
-### 3. Zaaplikuj seed data
+### 3. Apply seed data
 
 ```bash
-docker-compose exec -T db psql -U postgres -d goticket -f /dev/stdin < tests/load/seed.sql
+docker compose exec -T db psql -U postgres -d goticket -f /dev/stdin < tests/load/seed.sql
 ```
 
-Weryfikacja:
+Verify seed was applied:
 
 ```bash
-docker-compose exec db psql -U postgres -d goticket -c "SELECT email, role FROM users;"
-docker-compose exec db psql -U postgres -d goticket -c "SELECT name, available_spots FROM events;"
+docker compose exec db psql -U postgres -d goticket -c "SELECT email, role FROM users;"
+docker compose exec db psql -U postgres -d goticket -c "SELECT name, available_spots FROM events;"
 ```
 
-### 4. Uruchom test
+### 4. Run the load test
 
 ```bash
 k6 run tests/load/booking_scenario.js
 ```
 
-### 5. Weryfikacja po teście — czy nie ma double-bookingu
+### 5. Verify — check for double-bookings after the test
 
 ```bash
-docker-compose exec db psql -U postgres -d goticket \
+docker compose exec db psql -U postgres -d goticket \
   -c "SELECT COUNT(*) FROM bookings WHERE event_id = 'a0000000-0000-0000-0000-000000000001';"
 
-docker-compose exec db psql -U postgres -d goticket \
+docker compose exec db psql -U postgres -d goticket \
   -c "SELECT available_spots FROM events WHERE id = 'a0000000-0000-0000-0000-000000000001';"
 ```
 
-Oczekiwany wynik: `COUNT(*) + available_spots = 10000`
+**Expected result**: `COUNT(*) + available_spots = 10000`
 
-## Scenariusz (booking_scenario.js)
+---
+
+## Scenario: booking_scenario.js
 
 ### Thresholds
 
-| Metryka                   | Threshold | Powód                    |
+| Metric | Threshold | Reason |
 | ------------------------- | --------- | ------------------------ |
-| `http_req_duration` p(95) | < 200ms   | SLA dla API bookingowego |
-| `http_req_failed`         | < 1%      | Dopuszczalny error rate  |
+| `http_req_duration` p(95) | < 200ms | SLA for the booking API |
+| `http_req_failed` | < 1% | Acceptable error rate |
 
 ### Stages (ramp-up)
 
 ```
-10s  → 10 VU   (warm-up)
-30s  → 50 VU   (normalny ruch)
-20s  → 100 VU  (peak)
-10s  → 0 VU    (ramp-down)
+10s  → 10 VUs   (warm-up)
+30s  → 50 VUs   (normal traffic)
+20s  → 100 VUs  (peak load)
+10s  → 0 VUs    (ramp-down)
 ```
 
-### ⚠️ Co jeszcze wymaga implementacji w booking_scenario.js
-
-Obecny stan pliku ma `options` i `default()` — **brakuje**:
-
-#### 1. Funkcja `setup()` — uruchamia się RAZ przed testem
-
-```
-Pseudokod:
-export function setup() {
-    // 1. POST /auth/login z danymi z seed.sql
-    //    body: { email: "organizer@loadtest.com", password: "LoadTest123!" }
-    //    Oczekiwany response: { token: "eyJ..." }
-
-    // 2. Wyciągnij token z JSON response
-    //    const token = JSON.parse(res.body).token
-
-    // 3. Zwróć dane dla VU
-    //    return { token: token, eventId: 'a0000000-0000-0000-0000-000000000001' }
-}
-```
-
-#### 2. Zaktualizuj `default(data)` — przyjmuje dane z `setup()`
-
-```
-Pseudokod:
-export default function(data) {
-    // payload: { userEmail: "organizer@loadtest.com" }
-    // URL: /events/{data.eventId}/bookings
-    // Header: Authorization: Bearer {data.token}
-    // Oczekiwany status: 201 (lub 409 gdy event full)
-}
-```
-
-#### 3. Usuń hardkodowany event_id z payload body
-
-Endpoint `CreateBooking` oczekuje w body tylko `userEmail` — event_id idzie w URL path.
-
-### Docelowa struktura pliku
+### Scenario Structure
 
 ```javascript
 import http from 'k6/http'
@@ -137,24 +108,37 @@ import { check, sleep } from 'k6'
 export const options = { stages: [...], thresholds: {...} }
 
 export function setup() {
-    // login → return { token, eventId }
+    // Runs ONCE before the test
+    // POST /auth/login with seed credentials
+    // Returns { token, eventId } shared across all VUs
 }
 
 export default function(data) {
+    // Runs for every VU on every iteration
     // POST /events/{data.eventId}/bookings
     // Authorization: Bearer {data.token}
-    // body: { userEmail: "..." }
+    // Expect: 201 (success) or 409 (event full)
 }
 ```
 
-## Integracja z CI/CD (przyszłość)
+---
+
+## Proven Result
+
+**Verified**: 1031 bookings created + 8969 remaining spots = 10000 total — zero double-bookings under 100 concurrent users.
+
+This proves the `UPDATE events SET available_spots = available_spots - 1 WHERE available_spots > 0` atomic pattern works correctly under real concurrent HTTP load.
+
+---
+
+## CI/CD Integration (Future)
 
 ```yaml
 # .github/workflows/load-test.yml
 - name: Seed test data
-  run: docker-compose exec -T db psql ... < tests/load/seed.sql
+  run: docker compose exec -T db psql -U postgres -d goticket -f /dev/stdin < tests/load/seed.sql
 
-- name: Run k6
+- name: Run k6 load test
   uses: grafana/k6-action@v0.3.0
   with:
     filename: tests/load/booking_scenario.js
