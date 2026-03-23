@@ -26,6 +26,7 @@ import (
 	"github.com/mati/go-ticket/internal/services"
 	"github.com/mati/go-ticket/internal/workers"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/redis/go-redis/v9"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
@@ -117,7 +118,6 @@ func run(logger *slog.Logger) error {
 	signal.Notify(stop, os.Interrupt)
 
 	// RabbitMQ
-
 	connection, rabbitMQPublisher, err := setupRabbitMQ(rabbitMQURL)
 	if err != nil {
 		return err
@@ -152,6 +152,25 @@ func run(logger *slog.Logger) error {
 		err := relay.Start(workerCtx)
 		if err != nil {
 			erChan <- fmt.Errorf("relay error: %w", err)
+		}
+	}()
+
+	// RabbitMQ Email
+	consumer, worker, errSetUpEmail := setupEmailWorker(connection, redisClient, logger)
+	if errSetUpEmail != nil {
+		return errSetUpEmail
+	}
+
+	go func() {
+		err := worker.Start(workerCtx)
+		if err != nil {
+			erChan <- fmt.Errorf("failed to start worker: %w", err)
+		}
+	}()
+
+	defer func() {
+		if err := consumer.Close(); err != nil {
+			logger.Error("failed to close consumer", "error", err)
 		}
 	}()
 
@@ -366,4 +385,18 @@ func setupRabbitMQ(url string) (*amqp.Connection, *rabbitmq.RabbitMQPublisher, e
 	}
 
 	return conn, mqPublisher, nil
+}
+
+func setupEmailWorker(
+	conn *amqp.Connection,
+	redisClient *redis.Client,
+	logger *slog.Logger) (consumer *rabbitmq.RabbitMQConsumer, worker *workers.EmailWorker, err error) {
+	consumer, err = rabbitmq.NewRabbitMqConsumer(conn, "booking.notifications")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	worker = workers.NewEmailWorker(logger, redisClient, consumer)
+
+	return consumer, worker, nil
 }

@@ -115,7 +115,11 @@
     - [x] Wire consumer in `main.go` via `setupKafkaConsumer` with graceful shutdown
     - [x] Error handling via `erChan` (buffer 3) for relay, consumer, server goroutines
     - [x] Fixed shadow variable `ctx` → `initialCtx` / `workerCtx`
-  - [ ] Implement RabbitMQ Publisher for email task queue
+  - [x] Implement RabbitMQ Publisher for email task queue
+    - [x] `domain.NotificationPublisher` interface + `domain.BookingNotification` struct
+    - [x] `rabbitmq.RabbitMQPublisher` implementation (`internal/rabbitmq/publisher.go`)
+    - [x] Wire in `main.go` via `setupRabbitMQ` with graceful shutdown
+    - [x] RabbitMQ added to `docker-compose.yml` + all `.env` files
   - [ ] Implement Email Worker goroutine
 - [ ] **Microservices**: Extract Notification/Payment Service. <!-- id: 28 -->
 

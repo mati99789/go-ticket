@@ -5,19 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/mati/go-ticket/internal/domain"
 )
-
-type BookingEventPayload struct {
-	ID        uuid.UUID `json:"id"`
-	EventID   uuid.UUID `json:"eventID"`
-	UserEmail string    `json:"userEmail"`
-	CreatedAt time.Time `json:"createdAt"`
-	Status    string    `json:"status"`
-}
 
 type BookingEventHandler struct {
 	logger                *slog.Logger
@@ -34,7 +24,7 @@ func NewBookingEventHandler(
 }
 
 func (eh *BookingEventHandler) Handle(ctx context.Context, payload []byte) error {
-	var booking BookingEventPayload
+	var booking domain.BookingEventPayload
 	err := json.Unmarshal(payload, &booking)
 	if err != nil {
 		return fmt.Errorf("failed unmarshal booking event: %w", err)

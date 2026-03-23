@@ -70,8 +70,8 @@ We do not build everything at once. We follow an iterative "Evolutionary Archite
 
 - [x] Kafka Consumer for `booking_events_topic`
 - [x] Wire consumer goroutine in `main.go` with graceful shutdown + `erChan` error propagation
-- [ ] RabbitMQ added to `docker-compose.yml`
-- [ ] RabbitMQ Publisher (`internal/rabbitmq/publisher.go`)
+- [x] RabbitMQ added to `docker-compose.yml`
+- [x] RabbitMQ Publisher (`internal/rabbitmq/publisher.go`)
 - [ ] Email Worker (`internal/workers/email_worker.go`)
 - [ ] SMTP / Resend / SendGrid integration + email templates (booking confirmation)
 
